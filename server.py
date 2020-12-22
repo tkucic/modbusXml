@@ -7,7 +7,7 @@ from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
 #Import local scripts componenets
 import xml.etree.ElementTree as ET
 from threading import Thread
-import time
+import time, logging
 
 class Server:
     """Server simulator that serves on given ip and port and generates signals based on xml file"""
@@ -16,7 +16,6 @@ class Server:
         self.validateXml()
 
         parsedData = self._parseXml()
-        print(parsedData)
         registers = parsedData.get('registers')
         store = ModbusSlaveContext(
             di=ModbusSequentialDataBlock(registers.get('di').get('startAdr'), registers.get('di').get('regs')),
@@ -166,17 +165,22 @@ class Server:
 
             time.sleep(cycle_s)
 
-    def run_server(self, increment = True, cycle_s = 5):
+    def run_server(self, increment = True, cycle_s = 5, debug = True):
         """Runs the modbus tcp server with given register information. if increment is true, the register values are dynamic and incrementing by one
         every interval provided in cycle_s argument"""
-        print(f"Running server on IP: {self.ip} and port {self.port}")
+        if debug:
+            logging.basicConfig()
+            log = logging.getLogger()
+            log.setLevel(logging.DEBUG)
 
         if increment:
             thread = Thread(target=self.incRegValues, args=(cycle_s,), daemon=True)
             thread.start()
 
+        print(f"Running server on IP: {self.ip} and port {self.port}")
         StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.ip, self.port))
 
 if __name__ == "__main__":
+    
     sim = Server(r'server_signals.xml')
     sim.run_server(increment=True, cycle_s = 5)
