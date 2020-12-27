@@ -1,10 +1,6 @@
-#Checks if modbus communication works through python
-from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-import xml.etree.ElementTree as ET
 import tkinter, os
-from tkinter import ttk, filedialog, messagebox, OptionMenu, Text
 
-class reader:
+class readerGui:
     def __init__(self, master):
 
         self.master = master
@@ -37,7 +33,7 @@ class reader:
 
         #Command layer
         self.cmd_regType_value = tkinter.StringVar(value='Coil')
-        self.cmd_dropdown = OptionMenu(self.master, self.cmd_regType_value, "Coil", "Discrete input", "Input register", "Holding register")
+        self.cmd_dropdown = tkinter.OptionMenu(self.master, self.cmd_regType_value, "Coil", "Discrete input", "Input register", "Holding register")
         self.cmd_dropdown.grid(row=1, column=0, sticky="WE")
         self.cmd_register_value = tkinter.StringVar(value="10000")
         self.cmd_register = tkinter.Entry(self.master, textvariable=self.cmd_register_value)
@@ -51,8 +47,6 @@ class reader:
         self.statusTxt = tkinter.StringVar(value='IP Address: Not connected')
         self.StatusBar = tkinter.Label(self.master, textvariable=self.statusTxt)
         self.StatusBar.grid(row=2, column=0, columnspan=4, sticky="NSW")
-
-        
 
     def createClient(self, xmlFile, cycleTime_ms=500):
         #Load the signals into the container
@@ -74,7 +68,7 @@ class reader:
                 self.statusTxt.set(r'IP Address: self.client.ip (/)')
 
             #data = self.client.getData()
-            
+
             #Refresh data every half a second
             self.master.after(self.cycleTime_ms, self._update)
         else:
@@ -85,7 +79,7 @@ class reader:
 ####MAIN APP#######
 if __name__ == '__main__': 
     root = tkinter.Tk()
-    gui = reader(root)
+    gui = readerGui(root)
     gui.createClient(r'client_signals.xml', cycleTime_ms=500)
 
     #Call main loop
