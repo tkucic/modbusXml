@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+    <deviceData 
+        vendorName = "TkAutomation"
+        productCode = ""
+        vendorUrl = "https://github.com/tkucic/autoClientServer_modbusTcp"
+        productName = "CLIENT/SERVER SIMULATOR FOR MODBUS TCP"
+        modelName = "SERVER SIMULATOR FOR MODBUS TCP"
+        version = "0.0-1"
+        ip = "localhost"
+        port = "502"
+    />
+    <registers>
+        <!--Holding registers-->
+        <hr startingRegister="0" >
+            <mapping description="Test holding register signal", register="101010", initialValue="100" />
+            <mapping description="Test holding register signal", register="101010", initialValue="101" />
+            <mapping description="Test holding register signal", register="101010", initialValue="102" />
+            <mapping description="Test holding register signal", register="101010", initialValue="103" />
+            <mapping description="Test holding register signal", register="101010", initialValue="104" />
+            <mapping description="Test holding register signal", register="101010", initialValue="105" />
+            <mapping description="Test holding register signal", register="101010", initialValue="106" />
+            <mapping description="Test holding register signal", register="101010", initialValue="107" />
+        </hr>
+        <!--Digital inputs-->
+        <di startingRegister="0">
+            <mapping description="Test digital input signal", register="101010", initialValue="0" />
+            <mapping description="Test digital input signal", register="101010", initialValue="1" />
+            <mapping description="Test digital input signal", register="101010", initialValue="0" />
+            <mapping description="Test digital input signal", register="101010", initialValue="1" />
+            <mapping description="Test digital input signal", register="101010", initialValue="0" />
+            <mapping description="Test digital input signal", register="101010", initialValue="1" />
+            <mapping description="Test digital input signal", register="101010", initialValue="0" />
+            <mapping description="Test digital input signal", register="101010", initialValue="1" />
+        </di>
+        <!--Coils-->
+        <co startingRegister="0">
+            <mapping description="Test coil signal", register="101010", initialValue="0" />
+            <mapping description="Test coil signal", register="101010", initialValue="0" />
+            <mapping description="Test coil signal", register="101010", initialValue="0" />
+            <mapping description="Test coil signal", register="101010", initialValue="0" />
+            <mapping description="Test coil signal", register="101010", initialValue="0" />
+            <mapping description="Test coil signal", register="101010", initialValue="0" />
+            <mapping description="Test coil signal", register="101010", initialValue="0" />
+            <mapping description="Test coil signal", register="101010", initialValue="0" />
+        </co>
+        <!--Input registers-->
+        <ir startingRegister="0">
+            <mapping description="Test input register register signal", register="101010", initialValue="1000" />
+            <mapping description="Test input register register signal", register="101010", initialValue="1001" />
+            <mapping description="Test input register register signal", register="101010", initialValue="1002" />
+            <mapping description="Test input register register signal", register="101010", initialValue="1003" />
+            <mapping description="Test input register register signal", register="101010", initialValue="1004" />
+            <mapping description="Test input register register signal", register="101010", initialValue="1005" />
+            <mapping description="Test input register register signal", register="101010", initialValue="1006" />
+            <mapping description="Test input register register signal", register="101010", initialValue="1007" />
+        </ir>
+    </registers>
+</project>
