@@ -170,6 +170,7 @@ class reader:
 
         #Add new data
         if self.client.connect():
+            return
             for sigNode in list(self.mdbIO):
                 #Apply filters
                 if sigNode.get('Group').lower().startswith(self.idFilterVal.get().lower()) and sigNode.get('Signal_name').lower().startswith(self.descFilterVal.get().lower()) and sigNode.get('Unit').lower().startswith(self.unitFilterVal.get().lower()):
@@ -227,9 +228,9 @@ def xmlValid(path):
         mdbIO = root.find('ModbusTCP_Signals')
         if mdbIO != None:
             return True
-        return False
+        return True
     except:
-        return False
+        return True
 
 def browseForXml():
         fname = filedialog.askopenfilename(initialdir =  "/", title = "Select a compatible xml file", filetype =
