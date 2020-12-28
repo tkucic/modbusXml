@@ -17,6 +17,7 @@ class Server:
 
         parsedData = self._parseXml()
         registers = parsedData.get('registers')
+        
         store = ModbusSlaveContext(
             di=ModbusSequentialDataBlock(registers.get('di').get('startAdr'), registers.get('di').get('regs')),
             ir=ModbusSequentialDataBlock(registers.get('ir').get('startAdr'), registers.get('ir').get('regs')),
@@ -24,7 +25,7 @@ class Server:
             hr=ModbusSequentialDataBlock(registers.get('hr').get('startAdr'), registers.get('hr').get('regs')))
 
         self.context = ModbusServerContext(slaves=store, single=True)
-
+        self.registers = registers
         self.ip = parsedData.get('ip')
         self.port = parsedData.get('port')
         self.deviceIdentity = ModbusDeviceIdentification()
@@ -53,7 +54,7 @@ class Server:
         root = tree.getroot()
         registers = root.find('registers')
 
-        #Digital inputs (booleans)
+        #Discrete inputs (booleans)
         di = []
         diStartAdr = 0
         diNode = registers.find('di')
@@ -72,7 +73,7 @@ class Server:
         irStartAdr = 0
         irNode = registers.find('ir')
         if irNode != None:
-            irStartAdr = int(diNode.get('startingRegister'))
+            irStartAdr = int(irNode.get('startingRegister'))
             for mapping in irNode.findall('mapping'):
                 if mapping.get('initialValue') != None:
                     ir.append(int(mapping.get('initialValue')))
@@ -108,7 +109,6 @@ class Server:
                     co.append(0)
         else:
             co.append(0)
-
         data['registers'] = {
             'di' : {
                 'startAdr' : diStartAdr,
@@ -144,25 +144,29 @@ class Server:
         while True:
 
             #Get values from only the first slave/ multiple slaves unsupported
-            di_values = self.context[0].getValues(1, 0, count=100)
-            co_values = self.context[0].getValues(2, 0, count=100)
-            hr_values = self.context[0].getValues(3, 0, count=100)
-            ir_values = self.context[0].getValues(4, 0, count=100)
-
             #Toggle values of coils and digital inputs
-            di_values = [v - 1 if v == 1 else v + 1 for v in di_values]
-            co_values = [v - 1 if v == 1 else v + 1 for v in co_values]
+            di_values = self.context[0].getValues(2, self.registers.get('di').get('startAdr')-1, count=len(self.registers.get('di').get('regs')))
+            new_values = [v - 1 if v == 1 else v + 1 for v in di_values]
+            self.context[0].setValues(2, self.registers.get('di').get('startAdr')-1, new_values)
 
-            #Increment by one the values of analog registers
-            hr_values = [v + 1 for v in hr_values]
-            ir_values = [v + 1 for v in ir_values]
+            co_values = self.context[0].getValues(1, self.registers.get('co').get('startAdr')-1, count=len(self.registers.get('co').get('regs')))
+            new_values = [v - 1 if v == 1 else v + 1 for v in co_values]
+            self.context[0].setValues(1, self.registers.get('co').get('startAdr')-1, new_values)
 
-            #Update the values for only the first slave/ multiple slaves unsupported
-            self.context[0].setValues(1, 0, co_values)
-            self.context[0].setValues(2, 0, di_values)
-            self.context[0].setValues(3, 0, hr_values)
-            self.context[0].setValues(4, 0, ir_values)
+            hr_values = self.context[0].getValues(3, self.registers.get('hr').get('startAdr')-1, count=len(self.registers.get('hr').get('regs')))
+            new_values = [v + 1 for v in hr_values]
+            self.context[0].setValues(3, self.registers.get('hr').get('startAdr')-1, new_values)
 
+            ir_values = self.context[0].getValues(4, self.registers.get('ir').get('startAdr')-1, count=len(self.registers.get('ir').get('regs')))
+            new_values = [v + 1 for v in ir_values]
+            self.context[0].setValues(4, self.registers.get('ir').get('startAdr')-1, new_values)
+
+            #print(self.registers.get('di').get('startAdr'))
+            #print(self.context[0].getValues(1, self.registers.get('di').get('startAdr'), count=len(self.registers.get('di').get('regs'))))
+            #print(self.context[0].getValues(2, 0, count=65535))
+            #print(self.context[0].getValues(3, 0, count=65535))
+            #print(self.context[0].getValues(4, 0, count=65535))
+            
             time.sleep(cycle_s)
 
     def run_server(self, increment = True, cycle_s = 5, debug = True):
@@ -182,5 +186,5 @@ class Server:
 
 if __name__ == "__main__":
     
-    sim = Server(r'server_signals.xml')
-    sim.run_server(increment=True, cycle_s = 5)
+    sim = Server(r'client_server_signals.xml')
+    sim.run_server(increment=True, cycle_s = 1)
