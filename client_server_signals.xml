@@ -11,49 +11,49 @@
         port = "502"
     />
     <registers>
-        <!--Holding registers-->
-        <hr startingRegister="0" >
-            <mapping description="Test holding register signal", register="101010", initialValue="100" />
-            <mapping description="Test holding register signal", register="101010", initialValue="101" />
-            <mapping description="Test holding register signal", register="101010", initialValue="102" />
-            <mapping description="Test holding register signal", register="101010", initialValue="103" />
-            <mapping description="Test holding register signal", register="101010", initialValue="104" />
-            <mapping description="Test holding register signal", register="101010", initialValue="105" />
-            <mapping description="Test holding register signal", register="101010", initialValue="106" />
-            <mapping description="Test holding register signal", register="101010", initialValue="107" />
-        </hr>
-        <!--Digital inputs-->
-        <di startingRegister="0">
-            <mapping description="Test digital input signal", register="101010", initialValue="0" />
-            <mapping description="Test digital input signal", register="101010", initialValue="1" />
-            <mapping description="Test digital input signal", register="101010", initialValue="0" />
-            <mapping description="Test digital input signal", register="101010", initialValue="1" />
-            <mapping description="Test digital input signal", register="101010", initialValue="0" />
-            <mapping description="Test digital input signal", register="101010", initialValue="1" />
-            <mapping description="Test digital input signal", register="101010", initialValue="0" />
-            <mapping description="Test digital input signal", register="101010", initialValue="1" />
-        </di>
         <!--Coils-->
-        <co startingRegister="0">
-            <mapping description="Test coil signal", register="101010", initialValue="0" />
-            <mapping description="Test coil signal", register="101010", initialValue="0" />
-            <mapping description="Test coil signal", register="101010", initialValue="0" />
-            <mapping description="Test coil signal", register="101010", initialValue="0" />
-            <mapping description="Test coil signal", register="101010", initialValue="0" />
-            <mapping description="Test coil signal", register="101010", initialValue="0" />
-            <mapping description="Test coil signal", register="101010", initialValue="0" />
-            <mapping description="Test coil signal", register="101010", initialValue="0" />
+        <co startingRegister="100">
+            <mapping description="Coil #1" register="100" initialValue="0" />
+            <mapping description="Coil #2" register="101" initialValue="0" />
+            <mapping description="Coil #3" register="102" initialValue="0" />
+            <mapping description="Coil #4" register="103" initialValue="0" />
+            <mapping description="Coil #5" register="104" initialValue="1" />
+            <mapping description="Coil #6" register="105" initialValue="1" />
+            <mapping description="Coil #7" register="106" initialValue="1" />
+            <mapping description="Coil #8" register="107" initialValue="1" />
         </co>
+        <!--Discrete inputs-->
+        <di startingRegister="1000">
+            <mapping description="Discrete input #1" register="1000" initialValue="0" />
+            <mapping description="Discrete input #2" register="1001" initialValue="1" />
+            <mapping description="Discrete input #3" register="1002" initialValue="0" />
+            <mapping description="Discrete input #4" register="1003" initialValue="1" />
+            <mapping description="Discrete input #5" register="1004" initialValue="0" />
+            <mapping description="Discrete input #6" register="1005" initialValue="1" />
+            <mapping description="Discrete input #7" register="1006" initialValue="0" />
+            <mapping description="Discrete input #8" register="1007" initialValue="1" />
+        </di>
         <!--Input registers-->
-        <ir startingRegister="0">
-            <mapping description="Test input register register signal", register="101010", initialValue="1000" />
-            <mapping description="Test input register register signal", register="101010", initialValue="1001" />
-            <mapping description="Test input register register signal", register="101010", initialValue="1002" />
-            <mapping description="Test input register register signal", register="101010", initialValue="1003" />
-            <mapping description="Test input register register signal", register="101010", initialValue="1004" />
-            <mapping description="Test input register register signal", register="101010", initialValue="1005" />
-            <mapping description="Test input register register signal", register="101010", initialValue="1006" />
-            <mapping description="Test input register register signal", register="101010", initialValue="1007" />
-        </ir>
+        <ir startingRegister="10000">
+            <mapping description="Input register #1" register="10000" initialValue="1000" />
+            <mapping description="Input register #2" register="10001" initialValue="1001" />
+            <mapping description="Input register #3" register="10002" initialValue="1002" />
+            <mapping description="Input register #4" register="10003" initialValue="1003" />
+            <mapping description="Input register #5" register="10004" initialValue="1004" />
+            <mapping description="Input register #6" register="10005" initialValue="1005" />
+            <mapping description="Input register #7" register="10006" initialValue="1006" />
+            <mapping description="Input register #8" register="10007" initialValue="1007" />
+        </ir>-->
+        <!--Holding registers-->
+        <hr startingRegister="20000" >
+            <mapping description="Holding register #1" register="20000" initialValue="100" />
+            <mapping description="Holding register #2" register="20001" initialValue="101" />
+            <mapping description="Holding register #3" register="20002" initialValue="102" />
+            <mapping description="Holding register #4" register="20003" initialValue="103" />
+            <mapping description="Holding register #5" register="20004" initialValue="104" />
+            <mapping description="Holding register #6" register="20005" initialValue="105" />
+            <mapping description="Holding register #7" register="20006" initialValue="106" />
+            <mapping description="Holding register #8" register="20007" initialValue="107" />
+        </hr>
     </registers>
 </project>
