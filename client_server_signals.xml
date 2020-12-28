@@ -10,6 +10,13 @@
         ip = "localhost"
         port = "502"
     />
+    <!-- GUIDE ON XML SCHEMA
+    If server simulator is parsing this file:
+        register.xx startingRegister attribute must be present
+        register.xx.mapping initialValue attribuite is optional and will initialize the register if present
+    If client is parsing this file:
+        register.xx.mapping description attribute must be present
+        register.xx.mapping register attribuite must be present and match servers address of this value-->
     <registers>
         <!--Coils-->
         <co startingRegister="100">
@@ -21,6 +28,14 @@
             <mapping description="Coil #6" register="105" initialValue="1" />
             <mapping description="Coil #7" register="106" initialValue="1" />
             <mapping description="Coil #8" register="107" initialValue="1" />
+            <mapping description="Coil - Long description #1" register="108" />
+            <mapping description="Coil - Long description #2" register="109" />
+            <mapping description="Coil - Long description #3" register="110" />
+            <mapping description="Coil - Long description #4" register="111" />
+            <mapping description="Coil - Long description #5" register="112" />
+            <mapping description="Coil - Long description #6" register="113" />
+            <mapping description="Coil - Long description #7" register="114" />
+            <mapping description="Coil - Long description #8" register="115" />
         </co>
         <!--Discrete inputs-->
         <di startingRegister="1000">
@@ -32,6 +47,14 @@
             <mapping description="Discrete input #6" register="1005" initialValue="1" />
             <mapping description="Discrete input #7" register="1006" initialValue="0" />
             <mapping description="Discrete input #8" register="1007" initialValue="1" />
+            <mapping description="Discrete input - Long description #1" register="1008" />
+            <mapping description="Discrete input - Long description #2" register="1009" />
+            <mapping description="Discrete input - Long description #3" register="1010" />
+            <mapping description="Discrete input - Long description #4" register="1011" />
+            <mapping description="Discrete input - Long description #5" register="1012" />
+            <mapping description="Discrete input - Long description #6" register="1013" />
+            <mapping description="Discrete input - Long description #7" register="1014" />
+            <mapping description="Discrete input - Long description #8" register="1015" />
         </di>
         <!--Input registers-->
         <ir startingRegister="10000">
@@ -43,6 +66,14 @@
             <mapping description="Input register #6" register="10005" initialValue="1005" />
             <mapping description="Input register #7" register="10006" initialValue="1006" />
             <mapping description="Input register #8" register="10007" initialValue="1007" />
+            <mapping description="Input register - Long description #1" register="10008" />
+            <mapping description="Input register - Long description #2" register="10009" />
+            <mapping description="Input register - Long description #3" register="10010" />
+            <mapping description="Input register - Long description #4" register="10011" />
+            <mapping description="Input register - Long description #5" register="10012" />
+            <mapping description="Input register - Long description #6" register="10013" />
+            <mapping description="Input register - Long description #7" register="10014" />
+            <mapping description="Input register - Long description #8" register="10015" />
         </ir>-->
         <!--Holding registers-->
         <hr startingRegister="20000" >
@@ -54,6 +85,14 @@
             <mapping description="Holding register #6" register="20005" initialValue="105" />
             <mapping description="Holding register #7" register="20006" initialValue="106" />
             <mapping description="Holding register #8" register="20007" initialValue="107" />
+            <mapping description="Holding register - Long description #1" register="20008" />
+            <mapping description="Holding register - Long description #2" register="20009" />
+            <mapping description="Holding register - Long description #3" register="20010" />
+            <mapping description="Holding register - Long description #4" register="20011" />
+            <mapping description="Holding register - Long description #5" register="20012" />
+            <mapping description="Holding register - Long description #6" register="20013" />
+            <mapping description="Holding register - Long description #7" register="20014" />
+            <mapping description="Holding register - Long description #8" register="20015" />
         </hr>
     </registers>
 </project>

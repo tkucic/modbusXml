@@ -187,4 +187,4 @@ class Server:
 if __name__ == "__main__":
     
     sim = Server(r'client_server_signals.xml')
-    sim.run_server(increment=True, cycle_s = 1)
+    sim.run_server(increment=False, cycle_s = 1)
