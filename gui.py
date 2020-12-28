@@ -35,7 +35,7 @@ class readerGui:
 
         #Command layer
         self.cmd_regType_value = tkinter.StringVar(value='Coil')
-        self.cmd_dropdown = tkinter.OptionMenu(self.master, self.cmd_regType_value, "Coil", "Discrete input", "Input register", "Holding register")
+        self.cmd_dropdown = tkinter.OptionMenu(self.master, self.cmd_regType_value, "Coil", "Holding register")
         self.cmd_dropdown.grid(row=2, column=0, sticky="WE")
         self.cmd_register_value = tkinter.StringVar(value="10000")
         self.cmd_register = tkinter.Entry(self.master, textvariable=self.cmd_register_value)
@@ -58,7 +58,17 @@ class readerGui:
         return
 
     def sendCmd(self):
-        return
+        regType = self.cmd_regType_value.get()
+        try:
+            reg = int(self.cmd_register_value.get())
+            reg_value = int(self.cmd_value_value.get())
+            if regType == 'Coil':
+                self.client.write_coil(register=reg, value=reg_value)
+            elif regType == 'Holding register':
+                self.client.write_register(register=reg, value=reg_value)
+
+        except Exception as e:
+            self.cmd_value_value.set(e)
 
     def _update(self):
         #Request new data

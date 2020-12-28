@@ -151,6 +151,17 @@ class reader:
     def connect(self):
         return self.client.connect()
 
+    def write_coil(self, register, value):
+        if self.connect():
+            if value > 1:
+                value = 1
+            self.client.write_coil(address=register-1, value=value)
+    
+    def write_register(self, register, value):
+        if self.connect():
+            self.client.write_register(address=register-1, value=value)
+
+
 ####MAIN APP#######
 if __name__ == '__main__': 
     reader = reader(r'client_server_signals.xml')
