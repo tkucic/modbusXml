@@ -1,4 +1,5 @@
 import tkinter, os
+from tkinter import ttk
 from client import reader
 
 class readerGui:
@@ -8,37 +9,44 @@ class readerGui:
         master.title('Modbus TCP client')
         master.geometry('600x600')
 
-        #cConfigure rows and columns 7x4 geometry
-        tkinter.Grid.rowconfigure(self.master, 0, weight=0) #Label
-        tkinter.Grid.rowconfigure(self.master, 1, weight=1) #Content expands on all sides
-        tkinter.Grid.rowconfigure(self.master, 2, weight=0) #Cmd frame
-        tkinter.Grid.rowconfigure(self.master, 3, weight=0) #Status bar
+        #Configure rows and columns 7x4 geometry
+        tkinter.Grid.rowconfigure(self.master, 0, weight=1) #Content expands on all sides
+        tkinter.Grid.rowconfigure(self.master, 1, weight=0) #Cmd frame
+        tkinter.Grid.rowconfigure(self.master, 2, weight=0) #Status bar
         
         tkinter.Grid.columnconfigure(self.master, 0, weight=1)
         tkinter.Grid.columnconfigure(self.master, 1, weight=0)
 
-        #Create top description labels
-        topInfo = tkinter.Label(self.master, anchor='w', text=f"{'Type':<36}| {'Register':<13}| {'Value':<15}| Description")
-        topInfo.grid(row=0, column=0, columnspan=2, sticky="WE")
-
         #Create scrollbar
-        self.scrollbar = tkinter.Scrollbar(self.master)
-        self.scrollbar.grid(row=1, column=1, sticky='NSE')
+        self.scrollbar = ttk.Scrollbar(self.master)
+        self.scrollbar.grid(row=0, column=1, sticky='NSE')
 
         #Create the register view
-        self.regDataListBox = tkinter.Listbox(self.master, yscrollcommand=self.scrollbar.set)
-        self.regDataListBox.grid(row=1, column=0, sticky="NSWE")
+        self.regDataListBox = ttk.Treeview(self.master, yscrollcommand=self.scrollbar.set)
+        self.regDataListBox['columns'] = ('Type', 'Register', 'Value', 'Description')
+        self.regDataListBox.column('#0', width=0, stretch='no')
+        self.regDataListBox.column('Type', width='125', anchor='w')
+        self.regDataListBox.column('Register', width='75', anchor='center')
+        self.regDataListBox.column('Value', width='75', anchor='center')
+        self.regDataListBox.column('Description', width='300', anchor='w')
+        self.regDataListBox.heading('#0', text='')
+        self.regDataListBox.heading('Type', text='Type', anchor='w')
+        self.regDataListBox.heading('Register', text='Register', anchor='center')
+        self.regDataListBox.heading('Value', text='Value', anchor='center')
+        self.regDataListBox.heading('Description', text='Description', anchor='w')
+
+        self.regDataListBox.grid(row=0, column=0, sticky="NSWE", padx=5, pady=5)
         self.scrollbar.config(command = self.regDataListBox.yview)
 
         #Command layers
-        cmdFrame = tkinter.Frame(self.master)
-        cmdFrame.grid(row=2, column=0, columnspan=2, sticky='WE')
+        cmdFrame = ttk.Frame(self.master)
+        cmdFrame.grid(row=1, column=0, columnspan=2, sticky='WE')
         for i in range(0,5):
             tkinter.Grid.rowconfigure(cmdFrame, i, weight=1)
         for i in range(0,6):
             tkinter.Grid.columnconfigure(cmdFrame, i, weight=1)
         for i, text in enumerate(['Register type', 'Register', 'Value', 'Increment', 'Send once', 'Cycle send']):
-            infoLabel = tkinter.Label(cmdFrame, text=text)
+            infoLabel = ttk.Label(cmdFrame, text=text)
             infoLabel.grid(row=0, column=i, sticky="WE")
 
         self.cmd_regType = [tkinter.StringVar(value='Coil') for i in range(4)]
@@ -47,16 +55,20 @@ class readerGui:
         self.cmd_inc = [tkinter.IntVar() for i in range(4)]
         self.cmd_once = [tkinter.IntVar() for i in range(4)]
         self.cmd_cyclic = [tkinter.IntVar() for i in range(4)]
-        cmd_dropdown = [tkinter.OptionMenu(cmdFrame, self.cmd_regType[i], "Coil", "Holding register").grid(row=i+1, column=0, sticky='WE') for i in range(4)]
-        cmd_regEntry = [tkinter.Entry(cmdFrame, textvariable=self.cmd_reg[i]).grid(row=i+1, column=1, sticky='WE') for i in range(4)]
-        cmd_regValueEntry = [tkinter.Entry(cmdFrame, textvariable=self.cmd_value[i]).grid(row=i+1, column=2, sticky='WE') for i in range(4)]
-        cmd_incCb = [tkinter.Checkbutton(cmdFrame, variable=self.cmd_inc[i]).grid(row=i+1, column=3, sticky='WE') for i in range(4)]
-        cmd_sendOnceCb = [tkinter.Checkbutton(cmdFrame, variable=self.cmd_once[i]).grid(row=i+1, column=4, sticky='WE') for i in range(4)]
-        cmd_cyclicCb = [tkinter.Checkbutton(cmdFrame, variable=self.cmd_cyclic[i]).grid(row=i+1, column=5, sticky='WE') for i in range(4)]
+        cmd_dropdown = [ttk.OptionMenu(cmdFrame, self.cmd_regType[i], "Coil", "Holding register") for i in range(4)]
+        for i in range(4):
+            cmd_dropdown[i].grid(row=i+1, column=0, sticky='WE')
+            #cmd_dropdown[i]['menu'].config(font=FONT, bg=BG2, fg=TEXT_COLOR)
+            #cmd_dropdown[i].config(font=FONT, bg=BG2, fg=TEXT_COLOR)
+        cmd_regEntry = [ttk.Entry(cmdFrame, textvariable=self.cmd_reg[i]).grid(row=i+1, column=1, sticky='WE') for i in range(4)]
+        cmd_regValueEntry = [ttk.Entry(cmdFrame, textvariable=self.cmd_value[i]).grid(row=i+1, column=2, sticky='WE') for i in range(4)]
+        cmd_incCb = [ttk.Checkbutton(cmdFrame, variable=self.cmd_inc[i]).grid(row=i+1, column=3, sticky='WE') for i in range(4)]
+        cmd_sendOnceCb = [ttk.Checkbutton(cmdFrame, variable=self.cmd_once[i]).grid(row=i+1, column=4, sticky='WE') for i in range(4)]
+        cmd_cyclicCb = [ttk.Checkbutton(cmdFrame, variable=self.cmd_cyclic[i]).grid(row=i+1, column=5, sticky='WE') for i in range(4)]
 
         self.statusTxt = tkinter.StringVar(value='IP Address: Not connected')
-        statusBar = tkinter.Label(self.master, anchor='w', textvariable=self.statusTxt)
-        statusBar.grid(row=3, column=0, columnspan=2, sticky="SWE")
+        statusBar = ttk.Label(self.master, anchor='w', textvariable=self.statusTxt)
+        statusBar.grid(row=2, column=0, columnspan=2, sticky="SWE")
 
     def createClient(self, xmlFile, cycleTime_ms=500):
         #Create client and commence updating and sending commands on provided cycle time
@@ -120,19 +132,27 @@ class readerGui:
         if self.connected:
             self.client.update()
             vw = self.regDataListBox.yview()
-            self.regDataListBox.delete(0,tkinter.END)
-            for co in self.client.registers.get('co'):  
-                line = f" {'COIL':<35}| {co.get('register'):<15}| {co.get('value'):<15}| {co.get('description')}"
-                self.regDataListBox.insert(tkinter.END, line)
-            for di in self.client.registers.get('di'):
-                line = f" {'DISCRETE INPUT':<25}| {di.get('register'):<15}| {di.get('value'):<15}| {di.get('description')}"
-                self.regDataListBox.insert(tkinter.END, line)
-            for ir in self.client.registers.get('ir'):
-                line = f" {'INPUT REGISTER':<25}| {ir.get('register'):<15}| {ir.get('value'):<15}| {ir.get('description')}"
-                self.regDataListBox.insert(tkinter.END, line)
-            for hr in self.client.registers.get('hr'):
-                line = f" {'HOLDING REGISTER':<21}| {hr.get('register'):<15}| {hr.get('value'):<15}| {hr.get('description')}"
-                self.regDataListBox.insert(tkinter.END, line)
+            #Create entries if empty
+            if len(self.regDataListBox.get_children()) == 0:
+                for co in self.client.registers.get('co'):  
+                    self.regDataListBox.insert(parent='', index='end', iid=co.get('register'), text='', values=('COIL', co.get('register'), co.get('value'), co.get('description')))
+                for di in self.client.registers.get('di'):
+                    self.regDataListBox.insert(parent='', index='end', iid=di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
+                for ir in self.client.registers.get('ir'):
+                    self.regDataListBox.insert(parent='', index='end', iid=ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
+                for hr in self.client.registers.get('hr'):
+                    self.regDataListBox.insert(parent='', index='end', iid=hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
+            else:
+                #Update existing
+                for co in self.client.registers.get('co'):  
+                    self.regDataListBox.item(co.get('register'), text='', values=('COIL', co.get('register'), co.get('value'), co.get('description')))
+                for di in self.client.registers.get('di'):
+                    self.regDataListBox.item(di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
+                for ir in self.client.registers.get('ir'):
+                    self.regDataListBox.item(ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
+                for hr in self.client.registers.get('hr'):
+                    self.regDataListBox.item(hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
+            
             self.regDataListBox.yview_moveto(vw[0])
 
         self.master.after(self.cycleTime_ms, self._update)

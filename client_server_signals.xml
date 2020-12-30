@@ -16,7 +16,7 @@
         register.xx.mapping initialValue attribuite is optional and will initialize the register if present
     If client is parsing this file:
         register.xx.mapping description attribute must be present
-        register.xx.mapping register attribuite must be present and match servers address of this value-->
+        register.xx.mapping register attribuite must be present and match servers address of this value. It also must be unique, cant have co and di have same register number-->
     <registers>
         <!--Coils-->
         <co startingRegister="100">
