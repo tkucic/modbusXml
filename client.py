@@ -14,7 +14,7 @@ class reader:
         self.ip = parsedData.get('ip')
         self.port = parsedData.get('port')
         self.registers = parsedData.get('registers')
-        self.client = ModbusClient(self.ip, self.port)
+        self.client = ModbusClient(self.ip, self.port, timeout=2)
 
     def update(self):
         #Update register values
@@ -155,12 +155,11 @@ class reader:
         if self.connect():
             if value > 1:
                 value = 1
-            self.client.write_coil(address=register-1, value=value)
-    
+            return self.client.write_coil(address=register, value=value)
+
     def write_register(self, register, value):
         if self.connect():
-            self.client.write_register(address=register-1, value=value)
-
+            return self.client.write_register(address=register, value=value)
 
 ####MAIN APP#######
 if __name__ == '__main__': 
