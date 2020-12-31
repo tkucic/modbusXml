@@ -15,7 +15,7 @@
         register.xx startingRegister attribute must be present
         register.xx.mapping initialValue attribuite is optional and will initialize the register if present
     If client is parsing this file:
-        register.xx.mapping description attribute must be present
+        register.xx.mapping description attribute is optional but if missing the gui will show None for the description
         register.xx.mapping register attribuite must be present and match servers address of this value. It also must be unique, cant have co and di have same register number-->
     <registers>
         <!--Coils-->
@@ -59,7 +59,7 @@
         <!--Input registers-->
         <ir startingRegister="10000">
             <mapping description="Input register #1" register="10000" initialValue="1000" />
-            <mapping description="Input register #2" register="10001" initialValue="1001" />
+            <mapping register="10001" initialValue="1001" />
             <mapping description="Input register #3" register="10002" initialValue="1002" />
             <mapping description="Input register #4" register="10003" initialValue="1003" />
             <mapping description="Input register #5" register="10004" initialValue="1004" />
