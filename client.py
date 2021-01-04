@@ -3,11 +3,63 @@ from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 import xml.etree.ElementTree as ET
 
+def validateXml(file):
+    """Validates given xml file and returns a enumeration
+    0 - file ok
+    -1 - ip address missing
+    -2 - no register mappings
+    -3 - duplicated ir mapping
+    -4 - duplicated di mapping
+    -5 - duplicated hr mapping
+    -6 - duplicated co mapping"""
+    tree = ET.parse(file)
+    root = tree.getroot()
+    try:
+        if root.find('deviceData').get('ip') == None:
+            return -1
+    except:
+        return -1
+
+    registers = root.find('registers')
+    if registers == None:
+        return -2
+    ir_regs = []
+    di_regs = []
+    hr_regs = []
+    co_regs = []
+    for register in registers.findall('ir/mapping'):
+        if register.get('register') not in ir_regs:
+            ir_regs.append(register.get('register'))
+        else:
+            return -3
+    for register in registers.findall('di/mapping'):
+        if register.get('register') not in di_regs:
+            di_regs.append(register.get('register'))
+        else:
+            return -4
+    for register in registers.findall('hr/mapping'):
+        if register.get('register') not in hr_regs:
+            hr_regs.append(register.get('register'))
+        else:
+            return -5
+    for register in registers.findall('co/mapping'):
+        if register.get('register') not in co_regs:
+            co_regs.append(register.get('register'))
+        else:
+            return -6
+    return 0
+
 class reader:
     def __init__(self, xmlFile):
         """Parses the xml file and creates the reader"""
         self.xml = xmlFile
-        self.validateXml()
+        validationInt = validateXml(self.xml)
+        if validationInt == -1: raise Exception('XML File Error: IP address missing')
+        elif validationInt == -2: raise Exception('XML File Error: No register mappings')
+        elif validationInt == -3: raise Exception('XML File Error: Duplicated Input register mapping')
+        elif validationInt == -4: raise Exception('XML File Error: Duplicated Discrete input mapping')
+        elif validationInt == -5: raise Exception('XML File Error: Duplicated Holding register mapping')
+        elif validationInt == -6: raise Exception('XML File Error: Duplicated Coil mapping')
 
         parsedData = self._parseXml()
 
@@ -74,15 +126,7 @@ class reader:
         else:
             print('Connection failed')
 
-    def validateXml(self):
-        """Validates given xml file for correct format before the program starts"""
-        tree = ET.parse(self.xml)
-        root = tree.getroot()
-        registers = root.find('registers')
-        deviceData = root.find('deviceData')
-        if registers == None or deviceData == None:
-            raise Exception('XML file is not of correct format. Nodes registers and/or deviceData missing')
-        return True
+
     
     def _parseXml(self):
         """Parses xml file and validates the registers"""

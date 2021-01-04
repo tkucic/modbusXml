@@ -8,12 +8,19 @@ from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
 import xml.etree.ElementTree as ET
 from threading import Thread
 import time, logging
+from client import validateXml
 
 class Server:
     """Server simulator that serves on given ip and port and generates signals based on xml file"""
     def __init__(self, xmlFile):
         self.xml = xmlFile
-        self.validateXml()
+        validationInt = validateXml(self.xml)
+        if validationInt == -1: raise Exception('XML File Error: IP address missing')
+        elif validationInt == -2: raise Exception('XML File Error: No register mappings')
+        elif validationInt == -3: raise Exception('XML File Error: Duplicated Input register mapping')
+        elif validationInt == -4: raise Exception('XML File Error: Duplicated Discrete input mapping')
+        elif validationInt == -5: raise Exception('XML File Error: Duplicated Holding register mapping')
+        elif validationInt == -6: raise Exception('XML File Error: Duplicated Coil mapping')
 
         parsedData = self._parseXml()
         registers = parsedData.get('registers')
@@ -35,16 +42,6 @@ class Server:
         self.deviceIdentity.ProductName = parsedData.get("productName")
         self.deviceIdentity.ModelName = parsedData.get("modelName")
         self.deviceIdentity.MajorMinorRevision = parsedData.get("Version")
-
-    def validateXml(self):
-        """Validates given xml file for correct format before the program starts"""
-        tree = ET.parse(self.xml)
-        root = tree.getroot()
-        registers = root.find('registers')
-        deviceData = root.find('deviceData')
-        if registers == None or deviceData == None:
-            raise Exception('XML file is not of correct format. Nodes registers and/or deviceData missing')
-        return True
 
     def _parseXml(self):
         """Parses xml file and validates the registers"""
@@ -157,12 +154,15 @@ class Server:
             log = logging.getLogger()
             log.setLevel(logging.DEBUG)
 
-        if increment:
-            thread = Thread(target=self.incRegValues, args=(cycle_s,), daemon=True)
-            thread.start()
+        try:
+            if increment:
+                thread = Thread(target=self.incRegValues, args=(cycle_s,), daemon=True)
+                thread.start()
 
-        print(f"Running server on IP: {self.ip} and port {self.port}")
-        StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.ip, self.port))
+            print(f"Running server on IP: {self.ip} and port {self.port}")
+            StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.ip, self.port))
+        except KeyboardInterrupt:
+            print('Server stopped')
 
 if __name__ == "__main__":
     
