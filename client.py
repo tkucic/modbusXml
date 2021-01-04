@@ -98,6 +98,8 @@ class reader:
         if diNode != None:
             for mapping in diNode.findall('mapping'):
                 mapDict = mapping.attrib
+                if mapDict.get('description') == None:
+                    mapDict['description'] = '-'
                 mapDict['value'] = 0
                 di.append(mapDict)
 
@@ -107,6 +109,8 @@ class reader:
         if irNode != None:
             for mapping in irNode.findall('mapping'):
                 mapDict = mapping.attrib
+                if mapDict.get('description') == None:
+                    mapDict['description'] = '-'
                 mapDict['value'] = 0
                 ir.append(mapDict)
 
@@ -116,6 +120,8 @@ class reader:
         if hrNode != None:
             for mapping in hrNode.findall('mapping'):
                 mapDict = mapping.attrib
+                if mapDict.get('description') == None:
+                    mapDict['description'] = '-'
                 mapDict['value'] = 0
                 hr.append(mapDict)
 
@@ -125,6 +131,8 @@ class reader:
         if coNode != None:
             for mapping in coNode.findall('mapping'):
                 mapDict = mapping.attrib
+                if mapDict.get('description') == None:
+                    mapDict['description'] = '-'
                 mapDict['value'] = 0
                 co.append(mapDict)
 
