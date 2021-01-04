@@ -12,14 +12,16 @@
     />
     <!-- GUIDE ON XML SCHEMA
     If server simulator is parsing this file:
-        register.xx startingRegister attribute must be present
+        register.xx.mapping register attribute must be present
         register.xx.mapping initialValue attribuite is optional and will initialize the register if present
+        all number values must be integer 0-65535
     If client is parsing this file:
         register.xx.mapping description attribute is optional but if missing the gui will show None for the description
-        register.xx.mapping register attribuite must be present and match servers address of this value. It also must be unique, cant have co and di have same register number-->
+        register.xx.mapping register attribuite must be present and match servers address of this value. It also must be unique, cant have co and di have same register number
+        all number values must be integer 0-65535-->
     <registers>
         <!--Coils-->
-        <co startingRegister="100">
+        <co>
             <mapping description="Coil #1" register="100" initialValue="0" />
             <mapping description="Coil #2" register="101" initialValue="0" />
             <mapping description="Coil #3" register="102" initialValue="0" />
@@ -38,7 +40,7 @@
             <mapping description="Coil - Long description #8" register="115" />
         </co>
         <!--Discrete inputs-->
-        <di startingRegister="1000">
+        <di>
             <mapping description="Discrete input #1" register="1000" initialValue="0" />
             <mapping description="Discrete input #2" register="1001" initialValue="1" />
             <mapping description="Discrete input #3" register="1002" initialValue="0" />
@@ -57,7 +59,7 @@
             <mapping description="Discrete input - Long description #8" register="1015" />
         </di>
         <!--Input registers-->
-        <ir startingRegister="10000">
+        <ir>
             <mapping description="Input register #1" register="10000" initialValue="1000" />
             <mapping register="10001" initialValue="1001" />
             <mapping description="Input register #3" register="10002" initialValue="1002" />
@@ -76,7 +78,7 @@
             <mapping description="Input register - Long description #8" register="10015" />
         </ir>-->
         <!--Holding registers-->
-        <hr startingRegister="20000" >
+        <hr>
             <mapping description="Holding register #1" register="20000" initialValue="100" />
             <mapping description="Holding register #2" register="20001" initialValue="101" />
             <mapping description="Holding register #3" register="20002" initialValue="102" />
