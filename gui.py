@@ -4,6 +4,14 @@ from client import reader
 BG ='#2C2C2C'
 FG ='gray'
 
+def checkBit(x, n):
+    if (x & (1<<n)):
+        # n-th bit is set (1)
+        return True
+    else: 
+        # n-th bit is not set (0)
+        return False
+
 class readerGui:
     def __init__(self, master):
 
@@ -186,8 +194,12 @@ class readerGui:
                     self.regDataListBox.insert(parent='', index='end', iid=di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
                 for ir in self.client.registers.get('ir'):
                     self.regDataListBox.insert(parent='', index='end', iid=ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
+                    for i in range(16):
+                        self.regDataListBox.insert(parent=ir.get('register'), index='end', iid=f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), '-'))
                 for hr in self.client.registers.get('hr'):
                     self.regDataListBox.insert(parent='', index='end', iid=hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
+                    for i in range(16):
+                        self.regDataListBox.insert(parent=hr.get('register'), index='end', iid=f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'))
             else:
                 #Update existing
                 for co in self.client.registers.get('co'):  
@@ -196,8 +208,12 @@ class readerGui:
                     self.regDataListBox.item(di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
                 for ir in self.client.registers.get('ir'):
                     self.regDataListBox.item(ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
+                    for i in range(16):
+                        self.regDataListBox.item(f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), '-'))
                 for hr in self.client.registers.get('hr'):
                     self.regDataListBox.item(hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
+                    for i in range(16):
+                        self.regDataListBox.item(f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'))
             
             self.regDataListBox.yview_moveto(vw[0])
 
@@ -207,7 +223,8 @@ class readerGui:
 if __name__ == '__main__': 
     root = tkinter.Tk()
     gui = readerGui(root)
-    gui.createClient(r'client_server_signals.xml', cycleTime_ms=1500)
+    gui.createClient(r'newData.xml', cycleTime_ms=1500)
+    #gui.createClient(r'client_server_signals.xml', cycleTime_ms=1500)
 
     #Call main loop
     root.mainloop()
