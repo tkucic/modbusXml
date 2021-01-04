@@ -1,8 +1,6 @@
 import tkinter, os
 from tkinter import ttk
 from client import reader
-BG ='#2C2C2C'
-FG ='gray'
 
 def checkBit(x, n):
     if (x & (1<<n)):
@@ -21,7 +19,7 @@ class readerGui:
         master.title('Modbus TCP client')
         master.geometry('600x600')
         master.minsize(width=600, height=600)
-        master.configure(bg=BG)
+        master.configure(bg='#1e1e1e')
 
         #Configure rows and columns 7x4 geometry
         tkinter.Grid.rowconfigure(self.master, 0, weight=1) #Content expands on all sides
@@ -63,7 +61,7 @@ class readerGui:
             infoLabel = ttk.Label(cmdFrame, text=text, anchor='center',relief=tkinter.RIDGE)
             infoLabel.grid(row=0, column=i, sticky="WE", pady=5)
 
-        self.cmd_reg = [tkinter.StringVar(value='10000') for i in range(4)]
+        self.cmd_reg = [tkinter.StringVar(value='-1') for i in range(4)]
         self.cmd_value = [tkinter.StringVar(value='0') for i in range(4)]
         self.cmd_inc = [tkinter.IntVar() for i in range(4)]
         self.cmd_once = [tkinter.IntVar() for i in range(4)]
@@ -83,6 +81,10 @@ class readerGui:
         statusBar.grid(row=2, column=0, columnspan=2, sticky="SWE")
 
         #Configure styles
+        BG2 ='#252526'
+        BG ='#1e1e1e'
+        FG ='#cccccc'
+        HC = '#202d39'
         style = ttk.Style()
         style.theme_use('default')
         style.configure('.', font=('Verdana', 8), foreground=FG, background=BG)
@@ -96,24 +98,26 @@ class readerGui:
             rowheight=20,
             relief="ridge")
         style.map('Treeview',
-            background=[('selected', '#1A4EA8')],
-            foreground=[('selected', 'white')])
+            background=[('selected', HC)],
+            foreground=[('selected', FG)])
         style.map('Treeview.Heading',
             background=[('active', BG)],
             foreground=[('active', FG)])
-        style.configure('TEntry', foreground='black', fieldbackground=FG)
+        style.configure('TEntry', foreground=FG, fieldbackground=BG2)
         style.map('TEntry',
-            selectbackground=[('focus', '#1A4EA8'), ('!focus', '#1A4EA8')])
+            selectbackground=[('focus', HC), ('!focus', HC)])
         style.map('TCombobox',
-            background=[('readonly', BG)],
-            foreground=[('readonly', 'black')],
-            selectbackground=[('readonly', '#1A4EA8')],
-            fieldbackground=[('readonly', FG)])
+            background=[('readonly', BG2)],
+            foreground=[('readonly', FG)],
+            selectbackground=[('readonly', HC)],
+            fieldbackground=[('readonly', BG2)])
         style.map('TCheckbutton',
             background=[('active', BG)],
-            foreground=[('selected', '#1A4EA8')],
-            selectcolor=[('selected', '#1A4EA8')])
+            foreground=[('selected', HC)],
+            selectcolor=[('selected', HC)])
         
+        self.regDataListBox.tag_configure('child', background=BG2, foreground=FG)
+
         master.deiconify()
 
     def createClient(self, xmlFile, cycleTime_ms=500):
@@ -195,11 +199,11 @@ class readerGui:
                 for ir in self.client.registers.get('ir'):
                     self.regDataListBox.insert(parent='', index='end', iid=ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
                     for i in range(16):
-                        self.regDataListBox.insert(parent=ir.get('register'), index='end', iid=f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), '-'))
+                        self.regDataListBox.insert(parent=ir.get('register'), index='end', iid=f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), '-'), tags = ('child',))
                 for hr in self.client.registers.get('hr'):
                     self.regDataListBox.insert(parent='', index='end', iid=hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
                     for i in range(16):
-                        self.regDataListBox.insert(parent=hr.get('register'), index='end', iid=f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'))
+                        self.regDataListBox.insert(parent=hr.get('register'), index='end', iid=f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'), tags = ('child',))
             else:
                 #Update existing
                 for co in self.client.registers.get('co'):  
@@ -209,11 +213,11 @@ class readerGui:
                 for ir in self.client.registers.get('ir'):
                     self.regDataListBox.item(ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
                     for i in range(16):
-                        self.regDataListBox.item(f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), '-'))
+                        self.regDataListBox.item(f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), '-'), tags = ('child',))
                 for hr in self.client.registers.get('hr'):
                     self.regDataListBox.item(hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
                     for i in range(16):
-                        self.regDataListBox.item(f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'))
+                        self.regDataListBox.item(f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'), tags = ('child',))
             
             self.regDataListBox.yview_moveto(vw[0])
 
