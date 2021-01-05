@@ -126,6 +126,18 @@ For integer registers like input register and holding register, if the user doub
 
 The GUI provides four slots for writing either a coil or a holding register with data. The operator can write to a register only once or cyclically. On top of that, if the increment checkbox is selected, the GUI will increment the register value by 1 every cycle. If a wrong register or data is inputted, the GUI will write the exception message to the register value field so the user knows the write didnt go through.
 
+## Contributing
+
+Just fork the repo and raise your PR against master branch.
+
+## License Information
+
+These python scripts are built on top of Pymodbus package released under BSD Licence  
+[PyModbus License](https://github.com/riptideio/pymodbus/blob/master/LICENSE)  
+[PyModbus Homepage](https://github.com/riptideio/pymodbus)  
+
+These scripts are released under the MIT License
+
 [screen]: img/screenshot.png "Client and server screen shot"
 [pc-plc]: img/pc-plc.png "Representation of pc communicating with plc over modbus"
 [plc-pc]: img/plc-pc.png "Representation of plc communicating with pc over modbus"
