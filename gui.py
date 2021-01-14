@@ -1,4 +1,4 @@
-import tkinter, os
+import tkinter, os, sys
 from tkinter import ttk
 from client import reader
 
@@ -224,12 +224,27 @@ class readerGui:
         self.master.after(self.cycleTime_ms, self._update)
 
 ####MAIN APP#######
-if __name__ == '__main__': 
+if __name__ == '__main__':
+
+    #handle arguments to the script
+    #Default arguments
+    cycleTime_ms = 1500
+
+    opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
+    args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
+
+    #xml file path must be first
+    xmlFilePath = args[0]
+
+    try:
+        cycleTime_ms = int(args[1])
+    except IndexError:
+        #If cycle time not passed in then use default
+        pass
+
     root = tkinter.Tk()
     gui = readerGui(root)
-    gui.createClient(r'newData.xml', cycleTime_ms=1500)
-    #gui.createClient(r'client_server_signals.xml', cycleTime_ms=1500)
+    gui.createClient(xmlFilePath, cycleTime_ms=cycleTime_ms)
 
     #Call main loop
     root.mainloop()
-

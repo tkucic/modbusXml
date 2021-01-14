@@ -7,7 +7,7 @@ from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
 #Import local scripts componenets
 import xml.etree.ElementTree as ET
 from threading import Thread
-import time, logging
+import time, logging, sys
 from client import validateXml
 
 class Server:
@@ -164,7 +164,29 @@ class Server:
         except KeyboardInterrupt:
             print('Server stopped')
 
-if __name__ == "__main__":
-    
-    sim = Server(r'client_server_signals.xml')
-    sim.run_server(increment=True, cycle_s = 1)
+####MAIN APP#######
+if __name__ == '__main__':
+
+    #handle arguments to the script
+    #Default arguments
+    increment = False
+    cycleTime_s = 1
+
+    opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
+    args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
+    #xml file path must be first
+    xmlFilePath = args[0]
+
+    try:
+        cycleTime_s = int(int(args[1]) / 1000)
+    except IndexError:
+        #If cycle time not passed in then use default
+        pass
+
+    if '-i' in opts:
+        increment = True
+    if '--increment' in opts:
+        increment = True
+
+    sim = Server(xmlFilePath)
+    sim.run_server(increment=increment, cycle_s = cycleTime_s)

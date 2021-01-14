@@ -212,15 +212,3 @@ class reader:
     def write_register(self, register, value):
         if self.connect():
             return self.client.write_register(address=register, value=value)
-
-####MAIN APP#######
-if __name__ == '__main__': 
-    reader = reader(r'client_server_signals.xml')
-    reader.update()
-
-    import json
-    data = reader.registers
-    with open(r'testdata.json', 'w') as f:
-        f.write(json.dumps(data, indent=4))
-
-
