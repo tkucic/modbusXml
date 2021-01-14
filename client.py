@@ -126,8 +126,6 @@ class reader:
         else:
             print('Connection failed')
 
-
-    
     def _parseXml(self):
         """Parses xml file and validates the registers"""
         data = {}

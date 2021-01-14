@@ -2,7 +2,7 @@
 
 ![alt text][screen]
 
-This program uses pyModbus package to implement a Modbus TCP client class, GUI for that client and a server. Configuration of client and the server can be done from the register and device configuration xml. The user of the program just needs to modify the xml file and run the server and GUI.
+These programs use pyModbus package to implement a Modbus TCP client class, GUI for that client and a server. Configuration of client and the server can be done from the register and device configuration xml. The user of the program just needs to modify the xml file and run the server and GUI.
 
 ## Problem that is being solved
 
@@ -37,6 +37,7 @@ If we run multiple servers on the PC, the same or multiple devices, those device
 ## Installation
 
 Clone/download this repository
+
 Install pyModbus with command "python pip install pymodbus"
 
 ## Requirements
@@ -99,13 +100,40 @@ Install pyModbus with command "python pip install pymodbus"
 ## Client
 
 Client will read the given xml file, validate it and create internal model for each register mapped in the xml file. If the parsing has been completed succesfully the user has the ability to update the register values by using the update method. From there, the user can iterate over the returned array and find the wanted registers.
-The client can be ran straight from the package file "client.py" by opening it in a IDE. The client can be also imported into other python programs.
+The client can be ran from the interactive python shell with the example below. The client can be also imported into other python programs.
+
+```python
+
+    >> from client.py import reader
+    >> client = reader('c')
+    >> client.connect()
+    >> 'True'
+    >> client.update()
+    >> client.registers.get('di')
+    f"DISCRETE INPUT | REGISTER: {int(di.get('register'))} | DESCRIPTION: {di.get('description')} | VALUE: {di.get('value')}"
+
+    >> '{register' : 12345, 'description' : 'discrete input register #12345', 'value' : False, 'str_repr' : 'DISCRETE INPUT | REGISTER: 12345 | DESCRIPTION: discrete input register #12345 | VALUE: False'
+    >> client.registers.get('hr')
+    >> client.registers.get('ir')
+
+```
 
 ## Server
 
-Server will read the given xml file, validate it and create and internal model for each register mapped in the xml file. If the parsing has been completed succesfullt the server will start serving automatically. The server is designed to be run from a terminal. PyModbus debugging logger has been turned on so the server will print out to the terminal each operation it recieves.
+Server will read the given xml file, validate it and create and internal model for each register mapped in the xml file. If the parsing has been completed succesfullt the server will start serving automatically. The server is designed to be run from a terminal/command line. PyModbus debugging logger has been turned on so the server will print out to the terminal each operation it recieves.
 
-If the increment option has been enabled in the server, all of the registers will increment on the given cycle.
+### Options
+
+-i or --increment - Server will increment all of its number registers by 1 and flip bits every cycle
+
+If the number argument is ommitted then the server uses default cycle time of 1500 ms.
+
+```shell
+
+    python -i server.py client_server_signals.xml 1500
+    <pyhon> <-i> | <--increment> <server.py> <path to xml file> <cycle time in ms>
+
+```
 
 ## GUI
 
@@ -113,12 +141,16 @@ GUI automates a lot of the features to provide a consistant and simple usage.
 
 ### Automatic refresh of the data
 
-Based on the configured registers it will automatically refresh the data and display the register values in the GUI. Cycle time can be modified in the "GUI.py" file at the bottom.
-Register information available:
-Type - Coil, Discrete input, Input register, Holding register
-Register - Actual register being read 0-65535
-Value - unsigned integer value of the register
-Description - Optional register description read from the xml file
+Based on the configured registers it will automatically refresh the data and display the register values in the GUI.  
+Register information available:  
+
+- Type - Coil, Discrete input, Input register, Holding register  
+
+- Register - Actual register being read 0-65535  
+
+- Value - unsigned integer value of the register  
+
+- Description - Optional register description read from the xml file  
 
 For integer registers like input register and holding register, if the user double clicks on the register line, it will expand to show the 16 bits. This can be used for testing the packed integers.
 
@@ -126,6 +158,14 @@ For integer registers like input register and holding register, if the user doub
 
 The GUI provides four slots for writing either a coil or a holding register with data. The operator can write to a register only once or cyclically. On top of that, if the increment checkbox is selected, the GUI will increment the register value by 1 every cycle. If a wrong register or data is inputted, the GUI will write the exception message to the register value field so the user knows the write didnt go through.
 
+### Running the GUI
+
+The GUI can be ran from the command line with the example below. If the number argument is ommitted then the server uses default cycle time of 1500 ms.
+
+```shell
+    python gui.py client_server_signals.xml 1000
+    <pyhon> <gui.py> <path to xml file> <cycle time in ms>
+```
 ## Contributing
 
 Just fork the repo and raise your PR against master branch.
