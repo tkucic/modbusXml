@@ -29,7 +29,8 @@ class Server:
             di=ModbusSequentialDataBlock(0, registers.get('di')),
             ir=ModbusSequentialDataBlock(0, registers.get('ir')),
             co=ModbusSequentialDataBlock(0, registers.get('co')),
-            hr=ModbusSequentialDataBlock(0, registers.get('hr')))
+            hr=ModbusSequentialDataBlock(0, registers.get('hr')),
+            zero_mode=True)
 
         self.context = ModbusServerContext(slaves=store, single=True)
         self.registers = registers
@@ -123,21 +124,21 @@ class Server:
 
             #Get values from only the first slave/ multiple slaves unsupported
             #Toggle values of coils and digital inputs
-            di_values = self.context[0].getValues(2, -1, count=len(self.registers.get('di')))
+            di_values = self.context[0].getValues(2, 0, count=len(self.registers.get('di')))
             new_values = [v - 1 if v == 1 else v + 1 for v in di_values]
-            self.context[0].setValues(2, -1, new_values)
+            self.context[0].setValues(2, 0, new_values)
 
-            co_values = self.context[0].getValues(1, -1, count=len(self.registers.get('co')))
+            co_values = self.context[0].getValues(1, 0, count=len(self.registers.get('co')))
             new_values = [v - 1 if v == 1 else v + 1 for v in co_values]
-            self.context[0].setValues(1, -1, new_values)
+            self.context[0].setValues(1, 0, new_values)
 
-            hr_values = self.context[0].getValues(3, -1, count=len(self.registers.get('hr')))
+            hr_values = self.context[0].getValues(3, 0, count=len(self.registers.get('hr')))
             new_values = [v + 1 for v in hr_values]
-            self.context[0].setValues(3, -1, new_values)
+            self.context[0].setValues(3, 0, new_values)
 
-            ir_values = self.context[0].getValues(4, -1, count=len(self.registers.get('ir')))
+            ir_values = self.context[0].getValues(4, 0, count=len(self.registers.get('ir')))
             new_values = [v + 1 for v in ir_values]
-            self.context[0].setValues(4, -1, new_values)
+            self.context[0].setValues(4, 0, new_values)
 
             #print(self.context[0].getValues(1, 0, count=len(self.registers.get('di'))))
             #print(self.context[0].getValues(2, 0, count=65535))

@@ -75,7 +75,7 @@ class reader:
             for ir in self.registers.get('ir'):
                 #Request input register data
                 try:
-                    data = self.client.read_input_registers(address=int(ir.get('register'))-1, count=1)
+                    data = self.client.read_input_registers(address=int(ir.get('register')), count=1)
                     if not isinstance(data, ExceptionResponse):
                         ir['value'] = data.getRegister(0)
                     else:
@@ -88,7 +88,7 @@ class reader:
             for hr in self.registers.get('hr'):
                 #Request holding register data
                 try:
-                    data = self.client.read_holding_registers(address=int(hr.get('register'))-1, count=1)
+                    data = self.client.read_holding_registers(address=int(hr.get('register')), count=1)
                     if not isinstance(data, ExceptionResponse):
                         hr['value'] = data.getRegister(0)
                     else:
@@ -101,7 +101,7 @@ class reader:
             for co in self.registers.get('co'):
                 #Request coil data
                 try:
-                    data = self.client.read_coils(address=int(co.get('register'))-1, count=1)
+                    data = self.client.read_coils(address=int(co.get('register')), count=1)
                     if not isinstance(data, ExceptionResponse):
                         co['value'] = data.getBit(0)
                     else:
@@ -114,7 +114,7 @@ class reader:
             for di in self.registers.get('di'):
                 #Request discrete register data
                 try:
-                    data = self.client.read_discrete_inputs(address=int(di.get('register'))-1, count=1)
+                    data = self.client.read_discrete_inputs(address=int(di.get('register')), count=1)
                     if not isinstance(data, ExceptionResponse):
                         di['value'] = data.getBit(0)
                     else:
