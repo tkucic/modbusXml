@@ -125,13 +125,14 @@ Server will read the given xml file, validate it and create and internal model f
 ### Options
 
 -i or --increment - Server will increment all of its number registers by 1 and flip bits every cycle
+-d or --debug - Server will print out to the terminal every single operation
 
 If the number argument is ommitted then the server uses default cycle time of 1500 ms.
 
 ```shell
 
-    python -i server.py client_server_signals.xml 1500
-    <pyhon> <-i> | <--increment> <server.py> <path to xml file> <cycle time in ms>
+    python server.py -i -d client_server_signals.xml 1500
+    <pyhon> <server.py> <-i> | <--increment> <-d> | <--debug> <path to xml file> <cycle time in ms>
 
 ```
 
@@ -166,6 +167,7 @@ The GUI can be ran from the command line with the example below. If the number a
     python gui.py client_server_signals.xml 1000
     <pyhon> <gui.py> <path to xml file> <cycle time in ms>
 ```
+
 ## Contributing
 
 Just fork the repo and raise your PR against master branch.

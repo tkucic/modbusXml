@@ -171,6 +171,7 @@ if __name__ == '__main__':
     #handle arguments to the script
     #Default arguments
     increment = False
+    debug = False
     cycleTime_s = 1
 
     opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
@@ -188,6 +189,10 @@ if __name__ == '__main__':
         increment = True
     if '--increment' in opts:
         increment = True
+    if '-d' in opts:
+        debug = True
+    if '--debug' in opts:
+        debug = True
 
     sim = Server(xmlFilePath)
-    sim.run_server(increment=increment, cycle_s = cycleTime_s)
+    sim.run_server(increment=increment, cycle_s = cycleTime_s, debug=debug)
