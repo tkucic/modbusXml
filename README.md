@@ -1,4 +1,4 @@
-# AUTO CLIENT SERVER FOR MODBUS TCP
+# EASY CLIENT SERVER FOR MODBUS TCP
 
 ![alt text][screen]
 
@@ -54,9 +54,9 @@ Install pyModbus with command "python pip install pymodbus"
         vendorName = "TkAutomation"
         productCode = ""
         vendorUrl = "https://github.com/tkucic/autoClientServer_modbusTcp"
-        productName = "CLIENT/SERVER SIMULATOR FOR MODBUS TCP"
+        productName = "EASY CLIENT/SERVER SIMULATOR FOR MODBUS TCP"
         modelName = "SERVER SIMULATOR FOR MODBUS TCP"
-        version = "0.0-1"
+        version = "1.0-0"
         ip = "localhost"
         port = "502"
     />

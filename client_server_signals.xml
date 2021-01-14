@@ -4,9 +4,9 @@
         vendorName = "TkAutomation"
         productCode = ""
         vendorUrl = "https://github.com/tkucic/autoClientServer_modbusTcp"
-        productName = "CLIENT/SERVER SIMULATOR FOR MODBUS TCP"
+        productName = "EASY CLIENT/SERVER SIMULATOR FOR MODBUS TCP"
         modelName = "SERVER SIMULATOR FOR MODBUS TCP"
-        version = "0.0-1"
+        version = "1.0-0"
         ip = "localhost"
         port = "502"
     />
