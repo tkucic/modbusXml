@@ -1,4 +1,4 @@
-import tkinter, os, sys
+import tkinter, os, sys, threading, time
 from tkinter import ttk
 from client import reader
 
@@ -76,9 +76,18 @@ class readerGui:
         cmd_sendOnceCb = [ttk.Checkbutton(cmdFrame, variable=self.cmd_once[i]).grid(row=i+1, column=4, sticky='WE', padx=25) for i in range(4)]
         cmd_cyclicCb = [ttk.Checkbutton(cmdFrame, variable=self.cmd_cyclic[i]).grid(row=i+1, column=5, sticky='WE', padx=25) for i in range(4)]
 
+        #Status bar
+        statusFrame = ttk.Frame(self.master)
+        statusFrame.grid(row=2, column=0, columnspan=2, sticky='WE', padx=0, pady=0)
+        tkinter.Grid.rowconfigure(statusFrame, 0, weight=1)
+        tkinter.Grid.columnconfigure(statusFrame, 0, weight=1)
+        tkinter.Grid.columnconfigure(statusFrame, 1, weight=1)
+
         self.statusTxt = tkinter.StringVar(value='IP Address: Not connected')
-        statusBar = ttk.Label(self.master, anchor='w', textvariable=self.statusTxt,relief=tkinter.RIDGE)
-        statusBar.grid(row=2, column=0, columnspan=2, sticky="SWE")
+        ttk.Label(statusFrame, anchor='w', textvariable=self.statusTxt,relief=tkinter.RIDGE).grid(row=0, column=0, sticky="WE")
+
+        self.cycleTxt = tkinter.StringVar(value='Cycle time: xx ms')
+        ttk.Label(statusFrame, anchor='e', textvariable=self.cycleTxt,relief=tkinter.RIDGE).grid(row=0, column=1, sticky="WE")
 
         #Configure styles
         BG2 ='#252526'
@@ -124,24 +133,27 @@ class readerGui:
         #Create client and commence updating and sending commands on provided cycle time
         self.cycleTime_ms=cycleTime_ms
         self.client = reader(xmlFile)
-        self.master.after(100, self._connect)
+        self.connected = False
+        threading.Thread(target=self._connect, daemon=True).start()
         self.master.after(100, self._update)
         self.master.after(100, self._sendCmds)
         return
 
     def _connect(self):
-        #Connect to the server, check if connected, check connection every second, if failed check again in 5 seconds
-        if self.client.connect():
-            self.connected = True
-            if self.statusTxt.get()[-3:] == '(/)':
-                self.statusTxt.set(f"IP Address: {self.client.ip}:{self.client.port} (\)")
+        while True:
+            #Connect to the server, check if connected, check connection every second, if failed check again in 5 seconds
+            if self.client.connect():
+                self.connected = True
+                if self.statusTxt.get()[-3:] == '(/)':
+                    self.statusTxt.set(f"IP Address: {self.client.ip}:{self.client.port} (\)")
+                else:
+                    self.statusTxt.set(f"IP Address: {self.client.ip}:{self.client.port} (/)")
+                time.sleep(1)
             else:
-                self.statusTxt.set(f"IP Address: {self.client.ip}:{self.client.port} (/)")
-            self.master.after(1000, self._connect)
-        else:
-            self.connected = False
-            self.statusTxt.set('IP Address: Connection fail occurred, retrying in 5 sec')
-            self.master.after(5000, self._connect)
+                self.connected = False
+                self.statusTxt.set('IP Address: Connection fail occurred, retrying in 5 sec')
+                self.cycleTxt.set('Cycle time: xx ms')
+                time.sleep(5)
 
     def _sendCmds(self):
         #Go through the command layers
@@ -188,6 +200,7 @@ class readerGui:
     def _update(self):
         #Request new data
         if self.connected:
+            updateStartTime = time.perf_counter()
             self.client.update()
             vw = self.regDataListBox.yview()
             #Create entries if empty
@@ -218,7 +231,8 @@ class readerGui:
                     self.regDataListBox.item(hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
                     for i in range(16):
                         self.regDataListBox.item(f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'), tags = ('child',))
-            
+
+            self.cycleTxt.set(f'Cycle time: {int((time.perf_counter() - updateStartTime) * 1000)}ms')
             self.regDataListBox.yview_moveto(vw[0])
 
         self.master.after(self.cycleTime_ms, self._update)
