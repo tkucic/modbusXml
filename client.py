@@ -66,7 +66,7 @@ class reader:
         self.ip = parsedData.get('ip')
         self.port = parsedData.get('port')
         self.registers = parsedData.get('registers')
-        self.client = ModbusClient(self.ip, self.port, timeout=2)
+        self.client = ModbusClient(self.ip, self.port, timeout=1)
 
     def update(self):
         #Update register values
@@ -75,53 +75,53 @@ class reader:
             for ir in self.registers.get('ir'):
                 #Request input register data
                 try:
-                    data = self.client.read_input_registers(address=int(ir.get('register')), count=1)
+                    data = self.client.read_input_registers(address=ir.get('register'), count=1)
                     if not isinstance(data, ExceptionResponse):
                         ir['value'] = data.getRegister(0)
                     else:
                         ir['value'] = str(data)
                 except Exception as e:
                     ir['value'] = str(e)
-                ir['str_repr'] = f"INPUT REGISTER | REGISTER: {int(ir.get('register'))} | DESCRIPTION: {ir.get('description')} | VALUE: {ir.get('value')}"
+                #ir['str_repr'] = f"INPUT REGISTER | REGISTER: {int(ir.get('register'))} | DESCRIPTION: {ir.get('description')} | VALUE: {ir.get('value')}"
 
             #Holding registers
             for hr in self.registers.get('hr'):
                 #Request holding register data
                 try:
-                    data = self.client.read_holding_registers(address=int(hr.get('register')), count=1)
+                    data = self.client.read_holding_registers(address=hr.get('register'), count=1)
                     if not isinstance(data, ExceptionResponse):
                         hr['value'] = data.getRegister(0)
                     else:
                         hr['value'] = str(data)
                 except Exception as e:
                     hr['value'] = str(e)
-                hr['str_repr'] = f"HOLDING REGISTER | REGISTER: {int(hr.get('register'))} | DESCRIPTION: {hr.get('description')} | VALUE: {hr.get('value')}"
+                #hr['str_repr'] = f"HOLDING REGISTER | REGISTER: {int(hr.get('register'))} | DESCRIPTION: {hr.get('description')} | VALUE: {hr.get('value')}"
 
             #Coils
             for co in self.registers.get('co'):
                 #Request coil data
                 try:
-                    data = self.client.read_coils(address=int(co.get('register')), count=1)
+                    data = self.client.read_coils(address=co.get('register'), count=1)
                     if not isinstance(data, ExceptionResponse):
                         co['value'] = data.getBit(0)
                     else:
                         co['value'] = str(data)
                 except Exception as e:
                     co['value'] = str(e)
-                co['str_repr'] = f"COIL | REGISTER: {int(co.get('register'))} |DESCRIPTION: {co.get('description')} | VALUE: {co.get('value')}"
+                #co['str_repr'] = f"COIL | REGISTER: {int(co.get('register'))} |DESCRIPTION: {co.get('description')} | VALUE: {co.get('value')}"
 
             #Discrete inputs
             for di in self.registers.get('di'):
                 #Request discrete register data
                 try:
-                    data = self.client.read_discrete_inputs(address=int(di.get('register')), count=1)
+                    data = self.client.read_discrete_inputs(address=di.get('register'), count=1)
                     if not isinstance(data, ExceptionResponse):
                         di['value'] = data.getBit(0)
                     else:
                         di['value'] = str(data)
                 except Exception as e:
                     di['value'] = str(e)
-                di['str_repr'] = f"DISCRETE INPUT | REGISTER: {int(di.get('register'))} | DESCRIPTION: {di.get('description')} | VALUE: {di.get('value')}"
+                #di['str_repr'] = f"DISCRETE INPUT | REGISTER: {int(di.get('register'))} | DESCRIPTION: {di.get('description')} | VALUE: {di.get('value')}"
 
         else:
             print('Connection failed')
@@ -139,10 +139,11 @@ class reader:
         diNode = registers.find('di')
         if diNode != None:
             for mapping in diNode.findall('mapping'):
-                mapDict = mapping.attrib
-                if mapDict.get('description') == None:
-                    mapDict['description'] = '-'
-                mapDict['value'] = 0
+                mapDict = {
+                    'register' : int(mapping.get('register')),
+                    'description' : mapping.get('description', '-'),
+                    'value' : 0
+                }
                 di.append(mapDict)
 
         #Input registers (analogs)
@@ -150,10 +151,11 @@ class reader:
         irNode = registers.find('ir')
         if irNode != None:
             for mapping in irNode.findall('mapping'):
-                mapDict = mapping.attrib
-                if mapDict.get('description') == None:
-                    mapDict['description'] = '-'
-                mapDict['value'] = 0
+                mapDict = {
+                    'register' : int(mapping.get('register')),
+                    'description' : mapping.get('description', '-'),
+                    'value' : 0
+                }
                 ir.append(mapDict)
 
         #Holding registers (analogs)
@@ -161,10 +163,11 @@ class reader:
         hrNode = registers.find('hr')
         if hrNode != None:
             for mapping in hrNode.findall('mapping'):
-                mapDict = mapping.attrib
-                if mapDict.get('description') == None:
-                    mapDict['description'] = '-'
-                mapDict['value'] = 0
+                mapDict = {
+                    'register' : int(mapping.get('register')),
+                    'description' : mapping.get('description', '-'),
+                    'value' : 0
+                }
                 hr.append(mapDict)
 
         #Coils (booleans)
@@ -172,10 +175,11 @@ class reader:
         coNode = registers.find('co')
         if coNode != None:
             for mapping in coNode.findall('mapping'):
-                mapDict = mapping.attrib
-                if mapDict.get('description') == None:
-                    mapDict['description'] = '-'
-                mapDict['value'] = 0
+                mapDict = {
+                    'register' : int(mapping.get('register')),
+                    'description' : mapping.get('description', '-'),
+                    'value' : 0
+                }
                 co.append(mapDict)
 
         data['registers'] = {
