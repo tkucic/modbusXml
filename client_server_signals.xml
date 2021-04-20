@@ -41,7 +41,8 @@
         </co>
         <!--Discrete inputs-->
         <di>
-            <mapping description="Discrete input #1" register="1000" initialValue="0" />
+            <mapping 
+                description="Discrete input #1" register="1000" initialValue="0"/>
             <mapping description="Discrete input #2" register="1001" initialValue="1" />
             <mapping description="Discrete input #3" register="1002" initialValue="0" />
             <mapping description="Discrete input #4" register="1003" initialValue="1" />
@@ -60,15 +61,27 @@
         </di>
         <!--Input registers-->
         <ir>
-            <mapping description="Input register #1" register="10000" initialValue="1000" />
-            <mapping register="10001" initialValue="1001" />
+            <mapping description="Input register #1" register="10000" initialValue="1000"
+            bit0="Description of bit 0" bit1="Description of bit 1" bit2="Description of bit 2" bit3="Description of bit 2"
+                bit4="Description of bit 4" bit5="Description of bit 5" bit6="Description of bit 6" bit7="Description of bit 7"
+                bit8="Description of bit 8" bit9="Description of bit 9" bit10="Description of bit 10" bit11="Description of bit 11"
+                bit12="Description of bit 12" bit13="Description of bit 12" bit14="Description of bit 12" bit15="Description of bit 15" />
+            <mapping register="10001" initialValue="1001" 
+            bit0="Description of bit 0" bit1="Description of bit 1" bit2="Description of bit 2" bit3="Description of bit 2"
+                bit4="Description of bit 4" bit5="Description of bit 5" bit6="Description of bit 6" bit7="Description of bit 7"
+                bit8="Description of bit 8" bit9="Description of bit 9" bit10="Description of bit 10" bit11="Description of bit 11"
+                bit12="Description of bit 12" bit13="Description of bit 12" bit14="Description of bit 12" bit15="Description of bit 15"/>
             <mapping description="Input register #3" register="10002" initialValue="1002" />
             <mapping description="Input register #4" register="10003" initialValue="1003" />
             <mapping description="Input register #5" register="10004" initialValue="1004" />
             <mapping description="Input register #6" register="10005" initialValue="1005" />
             <mapping description="Input register #7" register="10006" initialValue="1006" />
             <mapping description="Input register #8" register="10007" initialValue="1007" />
-            <mapping description="Input register - Long description #1" register="10008" />
+            <mapping description="Input register - Long description #1" register="10008" 
+            bit0="Description of bit 0" bit1="Description of bit 1" bit2="Description of bit 2" bit3="Description of bit 2"
+                bit4="Description of bit 4" bit5="Description of bit 5" bit6="Description of bit 6" bit7="Description of bit 7"
+                bit8="Description of bit 8" bit9="Description of bit 9" bit10="Description of bit 10" bit11="Description of bit 11"
+                bit12="Description of bit 12" bit13="Description of bit 12" bit14="Description of bit 12" bit15="Description of bit 15"/>
             <mapping description="Input register - Long description #2" register="10009" />
             <mapping description="Input register - Long description #3" register="10010" />
             <mapping description="Input register - Long description #4" register="10011" />
@@ -79,12 +92,20 @@
         </ir>-->
         <!--Holding registers-->
         <hr>
-            <mapping description="Holding register #1" register="20000" initialValue="100" />
+            <mapping description="Holding register #1" register="20000" initialValue="100" 
+            bit0="Description of bit 0" bit1="Description of bit 1" bit2="Description of bit 2" bit3="Description of bit 2"
+                bit4="Description of bit 4" bit5="Description of bit 5" bit6="Description of bit 6" bit7="Description of bit 7"
+                bit8="Description of bit 8" bit9="Description of bit 9" bit10="Description of bit 10" bit11="Description of bit 11"
+                bit12="Description of bit 12" bit13="Description of bit 12" bit14="Description of bit 12" bit15="Description of bit 15"/>
             <mapping description="Holding register #2" register="20001" initialValue="101" />
             <mapping description="Holding register #3" register="20002" initialValue="102" />
             <mapping description="Holding register #4" register="20003" initialValue="103" />
             <mapping description="Holding register #5" register="20004" initialValue="104" />
-            <mapping description="Holding register #6" register="20005" initialValue="105" />
+            <mapping description="Holding register #6" register="20005" initialValue="105" 
+            bit0="Description of bit 0" bit1="Description of bit 1" bit2="Description of bit 2" bit3="Description of bit 2"
+                bit4="Description of bit 4" bit5="Description of bit 5" bit6="Description of bit 6" bit7="Description of bit 7"
+                bit8="Description of bit 8" bit9="Description of bit 9" bit10="Description of bit 10" bit11="Description of bit 11"
+                bit12="Description of bit 12" bit13="Description of bit 12" bit14="Description of bit 12" bit15="Description of bit 15"/>
             <mapping description="Holding register #7" register="20006" initialValue="106" />
             <mapping description="Holding register #8" register="20007" initialValue="107" />
             <mapping description="Holding register - Long description #1" register="20008" />
@@ -92,7 +113,11 @@
             <mapping description="Holding register - Long description #3" register="20010" />
             <mapping description="Holding register - Long description #4" register="20011" />
             <mapping description="Holding register - Long description #5" register="20012" />
-            <mapping description="Holding register - Long description #6" register="20013" />
+            <mapping description="Holding register - Long description #6" register="20013" 
+            bit0="Description of bit 0" bit1="Description of bit 1" bit2="Description of bit 2" bit3="Description of bit 2"
+                bit4="Description of bit 4" bit5="Description of bit 5" bit6="Description of bit 6" bit7="Description of bit 7"
+                bit8="Description of bit 8" bit9="Description of bit 9" bit10="Description of bit 10" bit11="Description of bit 11"
+                bit12="Description of bit 12" bit13="Description of bit 12" bit14="Description of bit 12" bit15="Description of bit 15"/>
             <mapping description="Holding register - Long description #7" register="20014" />
             <mapping description="Holding register - Long description #8" register="20015" />
         </hr>

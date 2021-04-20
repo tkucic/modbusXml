@@ -211,12 +211,12 @@ class readerGui:
                     self.regDataListBox.insert(parent='', index='end', iid=di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
                 for ir in self.client.registers.get('ir'):
                     self.regDataListBox.insert(parent='', index='end', iid=ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
-                    for i in range(16):
-                        self.regDataListBox.insert(parent=ir.get('register'), index='end', iid=f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), '-'), tags = ('child',))
+                    for ix, i in enumerate(range(16)):
+                        self.regDataListBox.insert(parent=ir.get('register'), index='end', iid=f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), ir.get(f"bit{ix}")), tags = ('child',))
                 for hr in self.client.registers.get('hr'):
                     self.regDataListBox.insert(parent='', index='end', iid=hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
-                    for i in range(16):
-                        self.regDataListBox.insert(parent=hr.get('register'), index='end', iid=f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'), tags = ('child',))
+                    for ix, i in enumerate(range(16)):
+                        self.regDataListBox.insert(parent=hr.get('register'), index='end', iid=f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), hr.get(f"bit{ix}")), tags = ('child',))
             else:
                 #Update existing
                 for co in self.client.registers.get('co'):  
@@ -225,12 +225,12 @@ class readerGui:
                     self.regDataListBox.item(di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
                 for ir in self.client.registers.get('ir'):
                     self.regDataListBox.item(ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
-                    for i in range(16):
-                        self.regDataListBox.item(f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), '-'), tags = ('child',))
+                    for ix, i in enumerate(range(16)):
+                        self.regDataListBox.item(f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), ir.get(f"bit{ix}")), tags = ('child',))
                 for hr in self.client.registers.get('hr'):
                     self.regDataListBox.item(hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
-                    for i in range(16):
-                        self.regDataListBox.item(f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), '-'), tags = ('child',))
+                    for ix, i in enumerate(range(16)):
+                        self.regDataListBox.item(f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), hr.get(f"bit{ix}")), tags = ('child',))
 
             self.cycleTxt.set(f'Cycle time: {int((time.perf_counter() - updateStartTime) * 1000)}ms')
             self.regDataListBox.yview_moveto(vw[0])

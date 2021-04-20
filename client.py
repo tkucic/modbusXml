@@ -154,6 +154,22 @@ class reader:
                 mapDict = {
                     'register' : int(mapping.get('register')),
                     'description' : mapping.get('description', '-'),
+                    'bit0' : mapping.get('bit0', '-'),
+                    'bit1' : mapping.get('bit1', '-'),
+                    'bit2' : mapping.get('bit2', '-'),
+                    'bit3' : mapping.get('bit3', '-'),
+                    'bit4' : mapping.get('bit4', '-'),
+                    'bit5' : mapping.get('bit5', '-'),
+                    'bit6' : mapping.get('bit6', '-'),
+                    'bit7' : mapping.get('bit7', '-'),
+                    'bit8' : mapping.get('bit8', '-'),
+                    'bit9' : mapping.get('bit9', '-'),
+                    'bit10' : mapping.get('bit10', '-'),
+                    'bit11' : mapping.get('bit11', '-'),
+                    'bit12' : mapping.get('bit12', '-'),
+                    'bit13' : mapping.get('bit13', '-'),
+                    'bit14' : mapping.get('bit14', '-'),
+                    'bit15' : mapping.get('bit15', '-'),
                     'value' : 0
                 }
                 ir.append(mapDict)
@@ -166,6 +182,22 @@ class reader:
                 mapDict = {
                     'register' : int(mapping.get('register')),
                     'description' : mapping.get('description', '-'),
+                    'bit0' : mapping.get('bit0', '-'),
+                    'bit1' : mapping.get('bit1', '-'),
+                    'bit2' : mapping.get('bit2', '-'),
+                    'bit3' : mapping.get('bit3', '-'),
+                    'bit4' : mapping.get('bit4', '-'),
+                    'bit5' : mapping.get('bit5', '-'),
+                    'bit6' : mapping.get('bit6', '-'),
+                    'bit7' : mapping.get('bit7', '-'),
+                    'bit8' : mapping.get('bit8', '-'),
+                    'bit9' : mapping.get('bit9', '-'),
+                    'bit10' : mapping.get('bit10', '-'),
+                    'bit11' : mapping.get('bit11', '-'),
+                    'bit12' : mapping.get('bit12', '-'),
+                    'bit13' : mapping.get('bit13', '-'),
+                    'bit14' : mapping.get('bit14', '-'),
+                    'bit15' : mapping.get('bit15', '-'),
                     'value' : 0
                 }
                 hr.append(mapDict)
