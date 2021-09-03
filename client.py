@@ -6,23 +6,40 @@ import xml.etree.ElementTree as ET
 def validateXml(file):
     """Validates given xml file and returns a enumeration
     0 - file ok
-    -1 - ip address missing
-    -2 - no register mappings
-    -3 - duplicated ir mapping
-    -4 - duplicated di mapping
-    -5 - duplicated hr mapping
-    -6 - duplicated co mapping"""
+    -1 - deviceData node missing
+    -2 - modbus type not set
+    -3 - rtu client not supported yet
+    -4 - ip address missing
+    -5 - no register mappings
+    -6 - duplicated ir mapping
+    -7 - duplicated di mapping
+    -8 - duplicated hr mapping
+    -9 - duplicated co mapping"""
     tree = ET.parse(file)
     root = tree.getroot()
+    #Check if deviceData exists
     try:
-        if root.find('deviceData').get('ip') == None:
+        deviceData = root.find('deviceData')
+        if deviceData == None:
             return -1
     except:
         return -1
+    #Check if modus type is set
+    if deviceData.get('modbusType') == None:
+        return -2
+    #Check if rtu
+    if deviceData.get('modbusType') == 'rtu':
+        return -3
+    
+    #Check if tcp/ip is set
+    if deviceData.get('modbusType') == 'tcp/ip':
+        if deviceData.get('ip') in [None, '']:
+            return -4
 
+    #Check for correct register nodes
     registers = root.find('registers')
     if registers == None:
-        return -2
+        return -5
     ir_regs = []
     di_regs = []
     hr_regs = []
@@ -31,22 +48,22 @@ def validateXml(file):
         if register.get('register') not in ir_regs:
             ir_regs.append(register.get('register'))
         else:
-            return -3
+            return -6
     for register in registers.findall('di/mapping'):
         if register.get('register') not in di_regs:
             di_regs.append(register.get('register'))
         else:
-            return -4
+            return -7
     for register in registers.findall('hr/mapping'):
         if register.get('register') not in hr_regs:
             hr_regs.append(register.get('register'))
         else:
-            return -5
+            return -8
     for register in registers.findall('co/mapping'):
         if register.get('register') not in co_regs:
             co_regs.append(register.get('register'))
         else:
-            return -6
+            return -9
     return 0
 
 class reader:

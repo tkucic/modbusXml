@@ -4,12 +4,18 @@
         vendorName = "TkAutomation"
         productCode = ""
         vendorUrl = "https://github.com/tkucic/autoClientServer_modbusTcp"
-        productName = "EASY CLIENT/SERVER SIMULATOR FOR MODBUS TCP"
-        modelName = "SERVER SIMULATOR FOR MODBUS TCP"
+        productName = "EASY CLIENT/SERVER SIMULATOR FOR MODBUS TCP/RTU"
+        modelName = "SERVER SIMULATOR FOR MODBUS TCP/RTU"
         version = "1.0-0"
+        modbusType = "rtu"
         ip = "localhost"
         port = "502"
-    />
+        com = "COM3"
+        baud = "19200"
+        stopbits = "1"
+        bytesize = "8"
+        parity = "E"
+    /> <!--rtu-->
     <!-- GUIDE ON XML SCHEMA
     If server simulator is parsing this file:
         register.xx.mapping register attribute must be present

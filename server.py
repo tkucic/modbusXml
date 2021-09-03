@@ -1,8 +1,9 @@
 #Import pymodbus components
-from pymodbus.server.sync import StartTcpServer
+from pymodbus.server.sync import StartTcpServer, StartSerialServer
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSparseDataBlock
 from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
+from pymodbus.transaction import ModbusRtuFramer
 
 #Import local scripts componenets
 import xml.etree.ElementTree as ET
@@ -15,12 +16,14 @@ class Server:
     def __init__(self, xmlFile):
         self.xml = xmlFile
         validationInt = validateXml(self.xml)
-        if validationInt == -1: raise Exception('XML File Error: IP address missing')
-        elif validationInt == -2: raise Exception('XML File Error: No register mappings')
-        elif validationInt == -3: raise Exception('XML File Error: Duplicated Input register mapping')
-        elif validationInt == -4: raise Exception('XML File Error: Duplicated Discrete input mapping')
-        elif validationInt == -5: raise Exception('XML File Error: Duplicated Holding register mapping')
-        elif validationInt == -6: raise Exception('XML File Error: Duplicated Coil mapping')
+        if validationInt == -1: raise Exception('XML File Error: DeviceData node missing')
+        elif validationInt == -2: raise Exception('XML File Error: Modbus type not set')
+        elif validationInt == -4: raise Exception('XML File Error: IP address missing')
+        elif validationInt == -5: raise Exception('XML File Error: No register mappings')
+        elif validationInt == -6: raise Exception('XML File Error: Duplicated Input register mapping')
+        elif validationInt == -7: raise Exception('XML File Error: Duplicated Discrete input mapping')
+        elif validationInt == -8: raise Exception('XML File Error: Duplicated Holding register mapping')
+        elif validationInt == -9: raise Exception('XML File Error: Duplicated Coil mapping')
 
         parsedData = self._parseXml()
         registers = parsedData.get('registers')
@@ -34,6 +37,12 @@ class Server:
 
         self.context = ModbusServerContext(slaves=store, single=True)
         self.registers = registers
+        self.modbusType = parsedData.get('modbusType')
+        self.com = parsedData.get('com')
+        self.baud = parsedData.get('baud')
+        self.stopbits = parsedData.get('stopbits')
+        self.bytesize = parsedData.get('bytesize')
+        self.parity = parsedData.get('parity')
         self.ip = parsedData.get('ip')
         self.port = parsedData.get('port')
         self.deviceIdentity = ModbusDeviceIdentification()
@@ -111,8 +120,16 @@ class Server:
         data['productName'] = deviceData.get("productName", '')
         data['modelName'] = deviceData.get("modelName", '')
         data['version'] = deviceData.get("version", '0.0-1')
-        data['ip'] = deviceData.get("ip")
+        data['modbusType'] = deviceData.get('modbusType')
+        data['com'] = deviceData.get("com", None)
+        data['baud'] = int(deviceData.get("baud", "9600"))
+        data['stopbits'] = int(deviceData.get("stopbits", "1"))
+        data['bytesize'] = int(deviceData.get("bytesize", "8"))
+        data['parity'] = deviceData.get("parity", "E")
+        data['ip'] = deviceData.get("ip", "localhost")
         data['port'] = int(deviceData.get("port", 502))
+        
+        
 
         return data
 
@@ -160,8 +177,14 @@ class Server:
                 thread = Thread(target=self.incRegValues, args=(cycle_s,), daemon=True)
                 thread.start()
 
-            print(f"Running server on IP: {self.ip} and port {self.port}")
-            StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.ip, self.port))
+            if self.modbusType == 'tcp/ip':
+                print(f"Running server on IP: {self.ip} and port {self.port}")
+                StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.ip, self.port))
+
+            elif self.modbusType == 'rtu':
+                print(f"Running server on COM: {self.com} and baudrate {self.baud}")
+                StartSerialServer(self.context, timeout=2, framer=ModbusRtuFramer, identity=self.deviceIdentity, port=self.com, stopbits=self.stopbits, bytesize=self.bytesize, parity=self.parity, baudrate=self.baud)
+ 
         except KeyboardInterrupt:
             print('Server stopped')
 
