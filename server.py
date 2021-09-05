@@ -124,38 +124,7 @@ class Server:
 
         return data
 
-    def incRegValues(self, cycle_s):
-        """ A worker process that runs on a given cycle and
-        updates live values of the context.
-        """
-        while True:
-
-            #Get values from only the first slave/ multiple slaves unsupported
-            #Toggle values of coils and digital inputs
-            di_values = self.context[0].getValues(2, 0, count=len(self.xmlData.get('registers').get('di')))
-            new_values = [v - 1 if v == 1 else v + 1 for v in di_values]
-            self.context[0].setValues(2, 0, new_values)
-
-            co_values = self.context[0].getValues(1, 0, count=len(self.xmlData.get('registers').get('co')))
-            new_values = [v - 1 if v == 1 else v + 1 for v in co_values]
-            self.context[0].setValues(1, 0, new_values)
-
-            hr_values = self.context[0].getValues(3, 0, count=len(self.xmlData.get('registers').get('hr')))
-            new_values = [v + 1 for v in hr_values]
-            self.context[0].setValues(3, 0, new_values)
-
-            ir_values = self.context[0].getValues(4, 0, count=len(self.xmlData.get('registers').get('ir')))
-            new_values = [v + 1 for v in ir_values]
-            self.context[0].setValues(4, 0, new_values)
-
-            #print(self.context[0].getValues(1, 0, count=len(self.xmlData.get('registers').get('di'))))
-            #print(self.context[0].getValues(2, 0, count=65535))
-            #print(self.context[0].getValues(3, 0, count=65535))
-            #print(self.context[0].getValues(4, 0, count=65535))
-            
-            time.sleep(cycle_s)
-
-    def run_server(self, increment = True, cycle_s = 5, debug = True):
+    def run_server(self, callback=None, debug = True):
         """Runs the modbus tcp or rtu server with given register information. if increment is true, the register values are dynamic and incrementing by one
         every interval provided in cycle_s argument"""
         if debug:
@@ -164,9 +133,9 @@ class Server:
             log.setLevel(logging.DEBUG)
 
         try:
-            #Data simulator will be called in a separate thread
-            if increment:
-                thread = Thread(target=self.incRegValues, args=(cycle_s,), daemon=True)
+            #Data callback function will be executed as a separate thread
+            if callback != None:
+                thread = Thread(target=callback, args=(self.context,), daemon=True)
                 thread.start()
 
             if self.xmlData.get('modbusType') == 'tcp/ip':
@@ -180,6 +149,35 @@ class Server:
         except KeyboardInterrupt:
             print('Server stopped')
 
+#Helpfull data simulators
+def incrementer(context):
+    """ A worker process that runs on a given cycle and
+    updates live values of the context.
+    """
+    while True:
+        updateStartTime = time.perf_counter()
+
+        #Get values from only the first slave/ multiple slaves unsupported
+        #Toggle values of coils and digital inputs
+        di_values = context[0].getValues(2, 0, count=65535)
+        new_values = [v - 1 if v == 1 else v + 1 for v in di_values]
+        context[0].setValues(2, 0, new_values)
+        co_values = context[0].getValues(1, 0, count=65535)
+        new_values = [v - 1 if v == 1 else v + 1 for v in co_values]
+        context[0].setValues(1, 0, new_values)
+        hr_values = context[0].getValues(3, 0, count=65535)
+        new_values = [v + 1 for v in hr_values]
+        context[0].setValues(3, 0, new_values)
+        ir_values = context[0].getValues(4, 0, count=65535)
+        new_values = [v + 1 for v in ir_values]
+        context[0].setValues(4, 0, new_values)
+        
+        #Calculate the latency
+        latency_ms = int((time.perf_counter() - updateStartTime) * 1000)
+        #if cycle time is faster than latency, go to sleep to match the cycle time
+        if latency_ms < 2000:
+            time.sleep((2000 - latency_ms) / 1000)
+
 ####MAIN APP#######
 if __name__ == '__main__':
 
@@ -187,27 +185,21 @@ if __name__ == '__main__':
     #Default arguments
     increment = False
     debug = False
-    cycleTime_s = 1
+    callback = None
 
     opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
     args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
     #xml file path must be first
     xmlFilePath = args[0]
 
-    try:
-        cycleTime_s = int(int(args[1]) / 1000)
-    except IndexError:
-        #If cycle time not passed in then use default
-        pass
-
     if '-i' in opts:
-        increment = True
+        callback = incrementer
     if '--increment' in opts:
-        increment = True
+        callback = incrementer
     if '-d' in opts:
         debug = True
     if '--debug' in opts:
         debug = True
 
     sim = Server(xmlFilePath)
-    sim.run_server(increment=increment, cycle_s = cycleTime_s, debug=debug)
+    sim.run_server(callback=callback, debug=debug)

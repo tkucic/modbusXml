@@ -232,12 +232,10 @@ class readerGui:
                         self.client.update_reg(di)
                         self.regDataListBox.item(di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
                     for ir in self.client.xmlData.get('registers').get('ir'):
-                        newTime = time.perf_counter()
                         self.client.update_reg(ir)
                         self.regDataListBox.item(ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
                         for ix, i in enumerate(range(16)):
                             self.regDataListBox.item(f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), ir.get(f"bit{ix}")), tags = ('child',))
-                        print(time.perf_counter() - newTime, ' time needed to update reg and graphis')
                     for hr in self.client.xmlData.get('registers').get('hr'):
                         self.client.update_reg(hr)
                         self.regDataListBox.item(hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
