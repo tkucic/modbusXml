@@ -7,11 +7,12 @@
         productName = "EASY CLIENT/SERVER SIMULATOR FOR MODBUS TCP/RTU"
         modelName = "SERVER SIMULATOR FOR MODBUS TCP/RTU"
         version = "1.0-0"
-        modbusType = "rtu"
+        modbusType = "tcp/ip"
+        timeout = "2"
         ip = "localhost"
         port = "502"
-        com = "COM3"
-        baud = "19200"
+        com = "COM1"
+        baud = "115200"
         stopbits = "1"
         bytesize = "8"
         parity = "E"
@@ -23,7 +24,7 @@
         all number values must be integer 0-65535
     If client is parsing this file:
         register.xx.mapping description attribute is optional but if missing the gui will show None for the description
-        register.xx.mapping register attribuite must be present and match servers address of this value. It also must be unique, cant have co and di have same register number
+        register.xx.mapping register attribute must be present and match servers address of this value. It also must be unique, cant have co and di have same register number
         all number values must be integer 0-65535-->
     <registers>
         <!--Coils-->

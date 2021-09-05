@@ -16,42 +16,34 @@ class Server:
     def __init__(self, xmlFile):
         self.xml = xmlFile
         validationInt = validateXml(self.xml)
-        if validationInt == -1: raise Exception('XML File Error: DeviceData node missing')
-        elif validationInt == -2: raise Exception('XML File Error: Modbus type not set')
-        elif validationInt == -4: raise Exception('XML File Error: IP address missing')
-        elif validationInt == -5: raise Exception('XML File Error: No register mappings')
-        elif validationInt == -6: raise Exception('XML File Error: Duplicated Input register mapping')
-        elif validationInt == -7: raise Exception('XML File Error: Duplicated Discrete input mapping')
-        elif validationInt == -8: raise Exception('XML File Error: Duplicated Holding register mapping')
-        elif validationInt == -9: raise Exception('XML File Error: Duplicated Coil mapping')
+        if validationInt == -1: raise Exception('XML File Error: devicData node missing')
+        elif validationInt == -2: raise Exception('XML File Error: modbus type not set')
+        elif validationInt == -3: raise Exception('XML File Error: ip address missing')
+        elif validationInt == -4: raise Exception('XML File Error: comm port missing')
+        elif validationInt == -5: raise Exception('XML File Error: baud rate missing')
+        elif validationInt == -10: raise Exception('XML File Error: No register mappings')
+        elif validationInt == -11: raise Exception('XML File Error: Duplicated Input register mapping')
+        elif validationInt == -12: raise Exception('XML File Error: Duplicated Discrete input mapping')
+        elif validationInt == -13: raise Exception('XML File Error: Duplicated Holding register mapping')
+        elif validationInt == -14: raise Exception('XML File Error: Duplicated Coil mapping')
 
-        parsedData = self._parseXml()
-        registers = parsedData.get('registers')
+        self.xmlData = self._parseXml()
         
         store = ModbusSlaveContext(
-            di=ModbusSequentialDataBlock(0, registers.get('di')),
-            ir=ModbusSequentialDataBlock(0, registers.get('ir')),
-            co=ModbusSequentialDataBlock(0, registers.get('co')),
-            hr=ModbusSequentialDataBlock(0, registers.get('hr')),
+            di=ModbusSequentialDataBlock(0, self.xmlData.get('registers').get('di')),
+            ir=ModbusSequentialDataBlock(0, self.xmlData.get('registers').get('ir')),
+            co=ModbusSequentialDataBlock(0, self.xmlData.get('registers').get('co')),
+            hr=ModbusSequentialDataBlock(0, self.xmlData.get('registers').get('hr')),
             zero_mode=True)
 
         self.context = ModbusServerContext(slaves=store, single=True)
-        self.registers = registers
-        self.modbusType = parsedData.get('modbusType')
-        self.com = parsedData.get('com')
-        self.baud = parsedData.get('baud')
-        self.stopbits = parsedData.get('stopbits')
-        self.bytesize = parsedData.get('bytesize')
-        self.parity = parsedData.get('parity')
-        self.ip = parsedData.get('ip')
-        self.port = parsedData.get('port')
         self.deviceIdentity = ModbusDeviceIdentification()
-        self.deviceIdentity.VendorName = parsedData.get("vendorName")
-        self.deviceIdentity.ProductCode = parsedData.get("productCode")
-        self.deviceIdentity.VendorUrl = parsedData.get("vendorUrl")
-        self.deviceIdentity.ProductName = parsedData.get("productName")
-        self.deviceIdentity.ModelName = parsedData.get("modelName")
-        self.deviceIdentity.MajorMinorRevision = parsedData.get("Version")
+        self.deviceIdentity.VendorName = self.xmlData.get("vendorName")
+        self.deviceIdentity.ProductCode = self.xmlData.get("productCode")
+        self.deviceIdentity.VendorUrl = self.xmlData.get("vendorUrl")
+        self.deviceIdentity.ProductName = self.xmlData.get("productName")
+        self.deviceIdentity.ModelName = self.xmlData.get("modelName")
+        self.deviceIdentity.MajorMinorRevision = self.xmlData.get("Version")
 
     def _parseXml(self):
         """Parses xml file and validates the registers"""
@@ -128,8 +120,7 @@ class Server:
         data['parity'] = deviceData.get("parity", "E")
         data['ip'] = deviceData.get("ip", "localhost")
         data['port'] = int(deviceData.get("port", 502))
-        
-        
+        data['timeout'] = int(deviceData.get('timeout', "2"))
 
         return data
 
@@ -141,23 +132,23 @@ class Server:
 
             #Get values from only the first slave/ multiple slaves unsupported
             #Toggle values of coils and digital inputs
-            di_values = self.context[0].getValues(2, 0, count=len(self.registers.get('di')))
+            di_values = self.context[0].getValues(2, 0, count=len(self.xmlData.get('registers').get('di')))
             new_values = [v - 1 if v == 1 else v + 1 for v in di_values]
             self.context[0].setValues(2, 0, new_values)
 
-            co_values = self.context[0].getValues(1, 0, count=len(self.registers.get('co')))
+            co_values = self.context[0].getValues(1, 0, count=len(self.xmlData.get('registers').get('co')))
             new_values = [v - 1 if v == 1 else v + 1 for v in co_values]
             self.context[0].setValues(1, 0, new_values)
 
-            hr_values = self.context[0].getValues(3, 0, count=len(self.registers.get('hr')))
+            hr_values = self.context[0].getValues(3, 0, count=len(self.xmlData.get('registers').get('hr')))
             new_values = [v + 1 for v in hr_values]
             self.context[0].setValues(3, 0, new_values)
 
-            ir_values = self.context[0].getValues(4, 0, count=len(self.registers.get('ir')))
+            ir_values = self.context[0].getValues(4, 0, count=len(self.xmlData.get('registers').get('ir')))
             new_values = [v + 1 for v in ir_values]
             self.context[0].setValues(4, 0, new_values)
 
-            #print(self.context[0].getValues(1, 0, count=len(self.registers.get('di'))))
+            #print(self.context[0].getValues(1, 0, count=len(self.xmlData.get('registers').get('di'))))
             #print(self.context[0].getValues(2, 0, count=65535))
             #print(self.context[0].getValues(3, 0, count=65535))
             #print(self.context[0].getValues(4, 0, count=65535))
@@ -165,7 +156,7 @@ class Server:
             time.sleep(cycle_s)
 
     def run_server(self, increment = True, cycle_s = 5, debug = True):
-        """Runs the modbus tcp server with given register information. if increment is true, the register values are dynamic and incrementing by one
+        """Runs the modbus tcp or rtu server with given register information. if increment is true, the register values are dynamic and incrementing by one
         every interval provided in cycle_s argument"""
         if debug:
             logging.basicConfig()
@@ -173,17 +164,18 @@ class Server:
             log.setLevel(logging.DEBUG)
 
         try:
+            #Data simulator will be called in a separate thread
             if increment:
                 thread = Thread(target=self.incRegValues, args=(cycle_s,), daemon=True)
                 thread.start()
 
-            if self.modbusType == 'tcp/ip':
-                print(f"Running server on IP: {self.ip} and port {self.port}")
-                StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.ip, self.port))
+            if self.xmlData.get('modbusType') == 'tcp/ip':
+                print(f"Running server on IP: {self.xmlData.get('ip')} and port {self.xmlData.get('port')}")
+                StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.xmlData.get('ip'), self.xmlData.get('port')))
 
-            elif self.modbusType == 'rtu':
-                print(f"Running server on COM: {self.com} and baudrate {self.baud}")
-                StartSerialServer(self.context, timeout=2, framer=ModbusRtuFramer, identity=self.deviceIdentity, port=self.com, stopbits=self.stopbits, bytesize=self.bytesize, parity=self.parity, baudrate=self.baud)
+            elif self.xmlData.get('modbusType') == 'rtu':
+                print(f"Running server on COM: {self.xmlData.get('com')} and baudrate {self.xmlData.get('baud')}")
+                StartSerialServer(self.context, timeout=self.xmlData.get('timeout'), framer=ModbusRtuFramer, identity=self.deviceIdentity, port=self.xmlData.get('com'), stopbits=self.xmlData.get('stopbits'), bytesize=self.xmlData.get('bytesize'), parity=self.xmlData.get('parity'), baudrate=self.xmlData.get('baud'))
  
         except KeyboardInterrupt:
             print('Server stopped')
