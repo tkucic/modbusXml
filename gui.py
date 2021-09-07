@@ -134,12 +134,12 @@ class readerGui:
         self.cycleTime_ms=cycleTime_ms
         self.client = reader(xmlFile)
         self.connected = False
-        threading.Thread(target=self._connect, daemon=True).start()
-        threading.Thread(target=self._update, daemon=True).start()
+        threading.Thread(target=self._connect_and_update, daemon=True).start()
+        self.master.after(100,self._update)
         self.master.after(100, self._sendCmds)
         return
 
-    def _connect(self):
+    def _connect_and_update(self):
         while True:
             #Connect to the server, check if connected, check connection every second, if failed check again in 5 seconds
             if self.client.connect():
@@ -154,7 +154,20 @@ class readerGui:
                 else:
                     self.statusTxt.set(f"{msg} (/)")
                 
-                time.sleep(1)
+                #update the registers
+                updateStartTime = time.perf_counter()
+                self.client.update_all()
+
+                #Calculate the latency and display it
+                latency_ms = int((time.perf_counter() - updateStartTime) * 1000)
+                if latency_ms > 1000:
+                    self.cycleTxt.set(f'Latency: {latency_ms / 1000}s')
+                else:
+                    self.cycleTxt.set(f'Latency: {latency_ms}ms')
+                #if cycle time is faster than latency, go to sleep to match the cycle time
+                if latency_ms < self.cycleTime_ms:
+                    time.sleep((self.cycleTime_ms - latency_ms) / 1000)
+
             else:
                 self.connected = False
                 self.statusTxt.set('Connection fail occurred, retrying in 5 sec')
@@ -204,54 +217,40 @@ class readerGui:
         self.master.after(500, self._sendCmds)
 
     def _update(self):
-        while True:
-            vw = self.regDataListBox.yview()
-            #Request new data
-            if self.connected:
-                #Create entries if empty
-                if len(self.regDataListBox.get_children()) == 0:
-                    for co in self.client.xmlData.get('registers').get('co'):
-                        self.regDataListBox.insert(parent='', index='end', iid=co.get('register'), text='', values=('COIL', co.get('register'), co.get('value'), co.get('description')))
-                    for di in self.client.xmlData.get('registers').get('di'):
-                        self.regDataListBox.insert(parent='', index='end', iid=di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
-                    for ir in self.client.xmlData.get('registers').get('ir'):
-                        self.regDataListBox.insert(parent='', index='end', iid=ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
-                        for ix, i in enumerate(range(16)):
-                            self.regDataListBox.insert(parent=ir.get('register'), index='end', iid=f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), ir.get(f"bit{ix}")), tags = ('child',))
-                    for hr in self.client.xmlData.get('registers').get('hr'):
-                        self.regDataListBox.insert(parent='', index='end', iid=hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
-                        for ix, i in enumerate(range(16)):
-                            self.regDataListBox.insert(parent=hr.get('register'), index='end', iid=f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), hr.get(f"bit{ix}")), tags = ('child',))
-                else:
-                    #Update existing
-                    updateStartTime = time.perf_counter()
-                    for co in self.client.xmlData.get('registers').get('co'):
-                        self.client.update_reg(co)
-                        self.regDataListBox.item(co.get('register'), text='', values=('COIL', co.get('register'), co.get('value'), co.get('description')))
-                    for di in self.client.xmlData.get('registers').get('di'):
-                        self.client.update_reg(di)
-                        self.regDataListBox.item(di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
-                    for ir in self.client.xmlData.get('registers').get('ir'):
-                        self.client.update_reg(ir)
-                        self.regDataListBox.item(ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
-                        for ix, i in enumerate(range(16)):
-                            self.regDataListBox.item(f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), ir.get(f"bit{ix}")), tags = ('child',))
-                    for hr in self.client.xmlData.get('registers').get('hr'):
-                        self.client.update_reg(hr)
-                        self.regDataListBox.item(hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
-                        for ix, i in enumerate(range(16)):
-                            self.regDataListBox.item(f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), hr.get(f"bit{ix}")), tags = ('child',))
-                    
-                    #Calculate the latency and display it
-                    latency_ms = int((time.perf_counter() - updateStartTime) * 1000)
-                    if latency_ms > 1000:
-                        self.cycleTxt.set(f'Latency: {latency_ms / 1000}s')
-                    else:
-                        self.cycleTxt.set(f'Latency: {latency_ms}ms')
-                    #if cycle time is faster than latency, go to sleep to match the cycle time
-                    if latency_ms < self.cycleTime_ms:
-                        time.sleep((self.cycleTime_ms - latency_ms) / 1000)
-            self.regDataListBox.yview_moveto(vw[0])
+        vw = self.regDataListBox.yview()
+        #Request new data
+        if self.connected:
+            #Create entries if empty
+            if len(self.regDataListBox.get_children()) == 0:
+                for co in self.client.xmlData.get('registers').get('co'):
+                    self.regDataListBox.insert(parent='', index='end', iid=co.get('register'), text='', values=('COIL', co.get('register'), co.get('value'), co.get('description')))
+                for di in self.client.xmlData.get('registers').get('di'):
+                    self.regDataListBox.insert(parent='', index='end', iid=di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
+                for ir in self.client.xmlData.get('registers').get('ir'):
+                    self.regDataListBox.insert(parent='', index='end', iid=ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
+                    for ix, i in enumerate(range(16)):
+                        self.regDataListBox.insert(parent=ir.get('register'), index='end', iid=f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), ir.get(f"bit{ix}")), tags = ('child',))
+                for hr in self.client.xmlData.get('registers').get('hr'):
+                    self.regDataListBox.insert(parent='', index='end', iid=hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
+                    for ix, i in enumerate(range(16)):
+                        self.regDataListBox.insert(parent=hr.get('register'), index='end', iid=f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), hr.get(f"bit{ix}")), tags = ('child',))
+            else:
+                #Update existing
+                for co in self.client.xmlData.get('registers').get('co'):
+                    self.regDataListBox.item(co.get('register'), text='', values=('COIL', co.get('register'), co.get('value'), co.get('description')))
+                for di in self.client.xmlData.get('registers').get('di'):
+                    self.regDataListBox.item(di.get('register'), text='', values=('DISCRETE INPUT', di.get('register'), di.get('value'), di.get('description')))
+                for ir in self.client.xmlData.get('registers').get('ir'):
+                    self.regDataListBox.item(ir.get('register'), text='', values=('INPUT REGISTER', ir.get('register'), ir.get('value'), ir.get('description')))
+                    for ix, i in enumerate(range(16)):
+                        self.regDataListBox.item(f"{ir.get('register')}.{i}", text='', values=(f"BIT {i}", f"{ir.get('register')}.{i}", checkBit(ir.get('value'), i), ir.get(f"bit{ix}")), tags = ('child',))
+                for hr in self.client.xmlData.get('registers').get('hr'):
+                    self.regDataListBox.item(hr.get('register'), text='', values=('HOLDING REGISTER', hr.get('register'), hr.get('value'), hr.get('description')))
+                    for ix, i in enumerate(range(16)):
+                        self.regDataListBox.item(f"{hr.get('register')}.{i}", text='', values=(f"BIT {i}", f"{hr.get('register')}.{i}", checkBit(hr.get('value'), i), hr.get(f"bit{ix}")), tags = ('child',))
+
+        self.regDataListBox.yview_moveto(vw[0])
+        self.master.after(100,self._update)
 
 ####MAIN APP#######
 if __name__ == '__main__':
