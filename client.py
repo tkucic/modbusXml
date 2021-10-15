@@ -2,6 +2,7 @@
 from pymodbus.client.sync import ModbusTcpClient, ModbusSerialClient
 from pymodbus.pdu import ExceptionResponse
 import xml.etree.ElementTree as ET
+import os, datetime
 
 def validateXml(file):
     """Validates given xml file and returns a enumeration
@@ -107,26 +108,57 @@ class reader:
         if self.client.connect():
             #Input registers
             for ir in self.xmlData.get('registers').get('ir'):
-                self.update_reg(ir)
+                self._update_reg(ir)
+                self._writeToLog(ir)
                 #ir['str_repr'] = f"INPUT REGISTER | REGISTER: {int(ir.get('register'))} | DESCRIPTION: {ir.get('description')} | VALUE: {ir.get('value')}"
 
             #Holding registers
             for hr in self.xmlData.get('registers').get('hr'):
-                self.update_reg(hr)
+                self._update_reg(hr)
+                self._writeToLog(hr)
                 #hr['str_repr'] = f"HOLDING REGISTER | REGISTER: {int(hr.get('register'))} | DESCRIPTION: {hr.get('description')} | VALUE: {hr.get('value')}"
 
             #Coils
             for co in self.xmlData.get('registers').get('co'):
-                self.update_reg(co)
+                self._update_reg(co)
+                self._writeToLog(co)
                 #co['str_repr'] = f"COIL | REGISTER: {int(co.get('register'))} |DESCRIPTION: {co.get('description')} | VALUE: {co.get('value')}"
 
             #Discrete inputs
             for di in self.xmlData.get('registers').get('di'):
-                self.update_reg(di)
+                self._update_reg(di)
+                self._writeToLog(di)
                 #di['str_repr'] = f"DISCRETE INPUT | REGISTER: {int(di.get('register'))} | DESCRIPTION: {di.get('description')} | VALUE: {di.get('value')}"
 
         else:
             print('Connection failed')
+
+    def _writeToLog(self, reg=None):
+        if not self.xmlData.get('log'):
+            return
+
+        if self.xmlData.get('log') not in ['all', 'partial']:
+            return
+
+        if type(reg)==dict:
+            if self.xmlData.get('log') == 'partial' and not reg.get('log'):
+                return
+            logstr = f"READ;{datetime.datetime.now()};{reg.get('type')};{reg.get('register')};{reg.get('description')};{reg.get('value')};\n"
+        
+        elif type(reg)==tuple:
+            logstr = f"WRITE;{datetime.datetime.now()};{reg[0]};{reg[1]};;{reg[2]};\n"
+        else:
+            #fault
+            return
+
+        #Check if the logging file exists already
+        if os.path.isfile('modbusLog.csv'):
+            with open('modbusLog.csv', 'a') as f:
+                f.write(logstr)
+        else:
+            with open('modbusLog.csv', 'w') as f:
+                f.write(f"Operation;Timestamp;Register Type;Register #; Description;Register Value;\n")
+                f.write(logstr)
 
     def _parseXml(self):
         """Parses xml file and validates the registers"""
@@ -145,7 +177,8 @@ class reader:
                     'register' : int(mapping.get('register')),
                     'type' : 'di',
                     'description' : mapping.get('description', '-'),
-                    'value' : 0
+                    'value' : 0,
+                    'log' : mapping.get('log', False)
                 }
                 di.append(mapDict)
 
@@ -174,7 +207,8 @@ class reader:
                     'bit13' : mapping.get('bit13', '-'),
                     'bit14' : mapping.get('bit14', '-'),
                     'bit15' : mapping.get('bit15', '-'),
-                    'value' : 0
+                    'value' : 0,
+                    'log' : mapping.get('log', False)
                 }
                 ir.append(mapDict)
 
@@ -203,7 +237,8 @@ class reader:
                     'bit13' : mapping.get('bit13', '-'),
                     'bit14' : mapping.get('bit14', '-'),
                     'bit15' : mapping.get('bit15', '-'),
-                    'value' : 0
+                    'value' : 0,
+                    'log' : mapping.get('log', False)
                 }
                 hr.append(mapDict)
 
@@ -216,7 +251,8 @@ class reader:
                     'register' : int(mapping.get('register')),
                     'type' : 'co',
                     'description' : mapping.get('description', '-'),
-                    'value' : 0
+                    'value' : 0,
+                    'log' : mapping.get('log', False)
                 }
                 co.append(mapDict)
 
@@ -244,13 +280,16 @@ class reader:
         data['ip'] = deviceData.get("ip", "localhost")
         data['port'] = int(deviceData.get("port", 502))
         data['timeout'] = int(deviceData.get('timeout', "2"))
+        #Log to file can be all or partial
+        #all logs all, partial only those with the flag
+        data['log'] = deviceData.get('log', False)
 
         return data
 
     def connect(self):
         return self.client.connect()
 
-    def update_reg(self, register):
+    def _update_reg(self, register):
         try:
             if register.get('type') == 'di':
                 data = self.client.read_discrete_inputs(address=register.get('register'), count=1)
@@ -336,8 +375,10 @@ class reader:
         if self.connect():
             if value > 1:
                 value = 1
+            self._writeToLog(reg=('co', register, value))
             return self.client.write_coil(address=register, value=value)
 
     def write_register(self, register, value):
         if self.connect():
+            self._writeToLog(reg=('hr', register, value))
             return self.client.write_register(address=register, value=value)

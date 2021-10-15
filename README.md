@@ -2,15 +2,15 @@
 
 ![alt text][screen]
 
-These programs use pyModbus package to implement a Modbus TCP client class, GUI for that client and a server. Configuration of client and the server can be done from the register and device configuration xml. The user of the program just needs to modify the xml file and run the server and GUI.
+These programs use pyModbus package to implement a Modbus client class, GUI for that client and a server. Configuration of client and the server can be done from the register and device configuration xml. The user of the program just needs to modify the xml file and run the server and GUI.
 
 ## Problem that is being solved
 
-In R&D we often need to develop interfaces for our devices and controllers. If we are integrating existing devices into our control system we also need to communicate with those devices. Often, Modbus TCP/IP gets chosen to be the working interface for its reliability and overall experience of the service engineers and developers. Modbus TCP/IP is built on ethernet packets which means we do not necesserally need a PLC or an embedded device to acomplish this interface. We can use our regular laptops and PCs. With the power of Python and PyModbus library we can run a Modbus TCP client and/or a server independent on what OS we are running. Python runs on Windows, MacOS and Linux and this program was even tested on a Raspbian running on Raspberry PI 3B+.
+In R&D we often need to develop interfaces for our devices and controllers. If we are integrating existing devices into our control system we also need to communicate with those devices. Often, Modbus gets chosen to be the working interface for its reliability and overall experience of the service engineers and developers. Modbus is also quite a defined interface which means we do not necessarilly need a PLC or an embedded device to acomplish this interface. We can use our regular laptops and PCs. With the power of Python and PyModbus library we can run a Modbus client and/or a server independent on what OS we are running. Python runs on Windows, MacOS and Linux and this program was even tested on a Raspbian running on Raspberry PI 3B+.
 
-In Modbus TCP we have client(master)/server(slave) architecture which means we need two computers running either a client or a server. Some of the example configurations that we can test with this program are described in the headings below.
+In Modbus, we have a client(master)/server(slave) architecture which means we need two computers running either a client or a server. Some of the example configurations that we can test with this program are described in the headings below.
 
-Usually to implement a modbus interface we need a mapping file. This mapping file can come in many formats but what it is containing is simple. What registers are avaialable and what is the location of that mapping in the register. This program is using XML technology to standardize these various formats. As a user of this program you are required to build that XML file from the modbus interface list.
+Usually to implement a modbus interface we need a mapping file. This mapping file can come in many formats but its contents are simple. Registers thatare available and their location in the modbus memory address. This program is using XML technology to standardize these various formats. As a user of this program you are required to build that XML file from the modbus interface list.
 
 ### PLC running a client - local PC/Laptop/Raspberry running a server
 
@@ -54,11 +54,19 @@ Install pyModbus with command "python pip install pymodbus"
         vendorName = "TkAutomation"
         productCode = ""
         vendorUrl = "https://github.com/tkucic/autoClientServer_modbusTcp"
-        productName = "EASY CLIENT/SERVER SIMULATOR FOR MODBUS TCP"
-        modelName = "SERVER SIMULATOR FOR MODBUS TCP"
+        productName = "EASY CLIENT/SERVER SIMULATOR FOR MODBUS TCP/RTU"
+        modelName = "SERVER SIMULATOR FOR MODBUS TCP/RTU"
         version = "1.0-0"
+        modbusType = "tcp/ip"
+        timeout = "2"
         ip = "localhost"
         port = "502"
+        com = "COM2"
+        baud = "19200"
+        stopbits = "1"
+        bytesize = "8"
+        parity = "E"
+        log = "partial"
     />
     <!-- GUIDE ON XML SCHEMA
     If server simulator is parsing this file:
@@ -72,30 +80,34 @@ Install pyModbus with command "python pip install pymodbus"
     <registers>
         <!--Coils-->
         <co>
-            <mapping description="Coil #1" register="100" initialValue="0" />
+            <mapping description="Coil #1" register="100" initialValue="0" log="True" />
             .
             .
         </co>
         <!--Discrete inputs-->
         <di>
-            <mapping description="Discrete input #1" register="1000" initialValue="0" />
+            <mapping description="Discrete input #1" register="1000" initialValue="0" log="True" />
             .
             .
         </di>
         <!--Input registers-->
         <ir>
-            <mapping description="Input register #1" register="10000" initialValue="1000" />
+            <mapping description="Input register #1" register="10000" initialValue="1000" log="True" />
             .
             .
         </ir>-->
         <!--Holding registers-->
         <hr>
             .
-            .<mapping description="Holding register #1" register="20000" initialValue="100" />
+            .<mapping description="Holding register #1" register="20000" initialValue="100" log="True" />
         </hr>
     </registers>
 </project>
 ```
+
+## TCP/IP or RTU selection
+
+The scripts have RTU and TCP/IP transportation protocols available and can be used by parametrizing the deviceData xml node. Please not that RTU requires a serial com port to be opened and a serial device correctly configured for this to work. To simulate RTU in the same way as TCP/IP for example, a virtual serial com port is needed. Check online to find a suitable virtual com port simulator.
 
 ## Client
 
@@ -105,18 +117,22 @@ The client can be ran from the interactive python shell with the example below. 
 ```python
 
     >> from client.py import reader
-    >> client = reader('c')
+    >> client = reader('path_to_xml_file.xml')
     >> client.connect()
     >> 'True'
-    >> client.update()
-    >> client.registers.get('di')
+    >> client.update_all()
+    >> client.xmlData.get('registers').get('di')[0]
     f"DISCRETE INPUT | REGISTER: {int(di.get('register'))} | DESCRIPTION: {di.get('description')} | VALUE: {di.get('value')}"
 
-    >> '{register' : 12345, 'description' : 'discrete input register #12345', 'value' : False, 'str_repr' : 'DISCRETE INPUT | REGISTER: 12345 | DESCRIPTION: discrete input register #12345 | VALUE: False'
     >> client.registers.get('hr')
     >> client.registers.get('ir')
 
 ```
+
+## Session logging
+
+Client class has the capability to log everything it reads in csv format. To set it up, in the deviceData xml node, if the log="all" or log="partial" atribute should be passed. log="all" attribute logs all mapped register and the log="partial" will log only the register with the log="True" attribute.
+The log file is created in the current working directory.
 
 ## Server
 
@@ -159,13 +175,17 @@ For integer registers like input register and holding register, if the user doub
 
 The GUI provides four slots for writing either a coil or a holding register with data. The operator can write to a register only once or cyclically. On top of that, if the increment checkbox is selected, the GUI will increment the register value by 1 every cycle. If a wrong register or data is inputted, the GUI will write the exception message to the register value field so the user knows the write didnt go through.
 
+### Status bar
+
+Status bar is showing the modbus interface type and the used parameters like baud rate and ip address. The latency calculation on the right size is showing how much time is necessary to get all of the defined register value. In translation, how often the data changes.
+
 ### Running the GUI
 
 The GUI can be ran from the command line with the example below. If the number argument is ommitted then the server uses default cycle time of 1500 ms.
 
 ```shell
     python gui.py client_server_signals.xml 1000
-    <pyhon> <gui.py> <path to xml file> <cycle time in ms>
+    <python> <gui.py> <path to xml file> <cycle time in ms>
 ```
 
 ## Contributing
