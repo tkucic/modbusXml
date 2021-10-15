@@ -1,4 +1,4 @@
-# EASY CLIENT SERVER FOR MODBUS TCP
+# Modbus XML
 
 ![alt text][screen]
 
