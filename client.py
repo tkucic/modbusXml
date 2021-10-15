@@ -1,28 +1,53 @@
 #Checks if modbus communication works through python
-from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+from pymodbus.client.sync import ModbusTcpClient, ModbusSerialClient
 from pymodbus.pdu import ExceptionResponse
 import xml.etree.ElementTree as ET
+import os, datetime
 
 def validateXml(file):
     """Validates given xml file and returns a enumeration
     0 - file ok
-    -1 - ip address missing
-    -2 - no register mappings
-    -3 - duplicated ir mapping
-    -4 - duplicated di mapping
-    -5 - duplicated hr mapping
-    -6 - duplicated co mapping"""
+    -1 - deviceData node missing
+    -2 - modbus type not set
+    -3 - ip address missing
+    -4 - com port missing
+    -5 - baud rate missing
+    -10 - no register mappings
+    -11 - duplicated ir mapping
+    -12 - duplicated di mapping
+    -13 - duplicated hr mapping
+    -14 - duplicated co mapping"""
     tree = ET.parse(file)
     root = tree.getroot()
+    #Check if deviceData exists
     try:
-        if root.find('deviceData').get('ip') == None:
+        deviceData = root.find('deviceData')
+        if deviceData == None:
             return -1
     except:
         return -1
 
+    #Check if modbus type is set
+    mdbType = deviceData.get('modbusType')
+    if mdbType == None:
+        return -2
+        
+    #Check if tcp/ip is set
+    if mdbType == 'tcp/ip':
+        if deviceData.get('ip') in [None, '']:
+            return -3
+
+    #Check if rtu parameters are set
+    if mdbType == 'rtu':
+        if deviceData.get('com') in [None, '']:
+            return -4
+        if deviceData.get('baud') in [None, '']:
+            return -5
+
+    #Check for correct register nodes
     registers = root.find('registers')
     if registers == None:
-        return -2
+        return -10
     ir_regs = []
     di_regs = []
     hr_regs = []
@@ -31,22 +56,22 @@ def validateXml(file):
         if register.get('register') not in ir_regs:
             ir_regs.append(register.get('register'))
         else:
-            return -3
+            return -11
     for register in registers.findall('di/mapping'):
         if register.get('register') not in di_regs:
             di_regs.append(register.get('register'))
         else:
-            return -4
+            return -12
     for register in registers.findall('hr/mapping'):
         if register.get('register') not in hr_regs:
             hr_regs.append(register.get('register'))
         else:
-            return -5
+            return -13
     for register in registers.findall('co/mapping'):
         if register.get('register') not in co_regs:
             co_regs.append(register.get('register'))
         else:
-            return -6
+            return -14
     return 0
 
 class reader:
@@ -54,77 +79,86 @@ class reader:
         """Parses the xml file and creates the reader"""
         self.xml = xmlFile
         validationInt = validateXml(self.xml)
-        if validationInt == -1: raise Exception('XML File Error: IP address missing')
-        elif validationInt == -2: raise Exception('XML File Error: No register mappings')
-        elif validationInt == -3: raise Exception('XML File Error: Duplicated Input register mapping')
-        elif validationInt == -4: raise Exception('XML File Error: Duplicated Discrete input mapping')
-        elif validationInt == -5: raise Exception('XML File Error: Duplicated Holding register mapping')
-        elif validationInt == -6: raise Exception('XML File Error: Duplicated Coil mapping')
+        if validationInt == -1: raise Exception('XML File Error: devicData node missing')
+        elif validationInt == -2: raise Exception('XML File Error: modbus type not set')
+        elif validationInt == -3: raise Exception('XML File Error: ip address missing')
+        elif validationInt == -4: raise Exception('XML File Error: comm port missing')
+        elif validationInt == -5: raise Exception('XML File Error: baud rate missing')
+        elif validationInt == -10: raise Exception('XML File Error: No register mappings')
+        elif validationInt == -11: raise Exception('XML File Error: Duplicated Input register mapping')
+        elif validationInt == -12: raise Exception('XML File Error: Duplicated Discrete input mapping')
+        elif validationInt == -13: raise Exception('XML File Error: Duplicated Holding register mapping')
+        elif validationInt == -14: raise Exception('XML File Error: Duplicated Coil mapping')
 
-        parsedData = self._parseXml()
+        self.xmlData = self._parseXml()
+        if self.xmlData.get('modbusType') == 'tcp/ip':
+            self.client = ModbusTcpClient(self.xmlData.get('ip'), self.xmlData.get('port'), timeout=1)
+        elif self.xmlData.get('modbusType') == 'rtu':
+            self.client = ModbusSerialClient(method = 'rtu', 
+                                            port = self.xmlData.get('com'),
+                                            baudrate = self.xmlData.get('baud'),
+                                            bytesize = self.xmlData.get('bytesize'),
+                                            stopbits = self.xmlData.get('stopbits'),
+                                            parity = self.xmlData.get('parity'),
+                                            timeout = self.xmlData.get('timeout'),
+                                            )
 
-        self.ip = parsedData.get('ip')
-        self.port = parsedData.get('port')
-        self.registers = parsedData.get('registers')
-        self.client = ModbusClient(self.ip, self.port, timeout=1)
-
-    def update(self):
+    def update_all(self):
         #Update register values
         if self.client.connect():
             #Input registers
-            for ir in self.registers.get('ir'):
-                #Request input register data
-                try:
-                    data = self.client.read_input_registers(address=ir.get('register'), count=1)
-                    if not isinstance(data, ExceptionResponse):
-                        ir['value'] = data.getRegister(0)
-                    else:
-                        ir['value'] = str(data)
-                except Exception as e:
-                    ir['value'] = str(e)
+            for ir in self.xmlData.get('registers').get('ir'):
+                self._update_reg(ir)
+                self._writeToLog(ir)
                 #ir['str_repr'] = f"INPUT REGISTER | REGISTER: {int(ir.get('register'))} | DESCRIPTION: {ir.get('description')} | VALUE: {ir.get('value')}"
 
             #Holding registers
-            for hr in self.registers.get('hr'):
-                #Request holding register data
-                try:
-                    data = self.client.read_holding_registers(address=hr.get('register'), count=1)
-                    if not isinstance(data, ExceptionResponse):
-                        hr['value'] = data.getRegister(0)
-                    else:
-                        hr['value'] = str(data)
-                except Exception as e:
-                    hr['value'] = str(e)
+            for hr in self.xmlData.get('registers').get('hr'):
+                self._update_reg(hr)
+                self._writeToLog(hr)
                 #hr['str_repr'] = f"HOLDING REGISTER | REGISTER: {int(hr.get('register'))} | DESCRIPTION: {hr.get('description')} | VALUE: {hr.get('value')}"
 
             #Coils
-            for co in self.registers.get('co'):
-                #Request coil data
-                try:
-                    data = self.client.read_coils(address=co.get('register'), count=1)
-                    if not isinstance(data, ExceptionResponse):
-                        co['value'] = data.getBit(0)
-                    else:
-                        co['value'] = str(data)
-                except Exception as e:
-                    co['value'] = str(e)
+            for co in self.xmlData.get('registers').get('co'):
+                self._update_reg(co)
+                self._writeToLog(co)
                 #co['str_repr'] = f"COIL | REGISTER: {int(co.get('register'))} |DESCRIPTION: {co.get('description')} | VALUE: {co.get('value')}"
 
             #Discrete inputs
-            for di in self.registers.get('di'):
-                #Request discrete register data
-                try:
-                    data = self.client.read_discrete_inputs(address=di.get('register'), count=1)
-                    if not isinstance(data, ExceptionResponse):
-                        di['value'] = data.getBit(0)
-                    else:
-                        di['value'] = str(data)
-                except Exception as e:
-                    di['value'] = str(e)
+            for di in self.xmlData.get('registers').get('di'):
+                self._update_reg(di)
+                self._writeToLog(di)
                 #di['str_repr'] = f"DISCRETE INPUT | REGISTER: {int(di.get('register'))} | DESCRIPTION: {di.get('description')} | VALUE: {di.get('value')}"
 
         else:
             print('Connection failed')
+
+    def _writeToLog(self, reg=None):
+        if not self.xmlData.get('log'):
+            return
+
+        if self.xmlData.get('log') not in ['all', 'partial']:
+            return
+
+        if type(reg)==dict:
+            if self.xmlData.get('log') == 'partial' and not reg.get('log'):
+                return
+            logstr = f"READ;{datetime.datetime.now()};{reg.get('type')};{reg.get('register')};{reg.get('description')};{reg.get('value')};\n"
+        
+        elif type(reg)==tuple:
+            logstr = f"WRITE;{datetime.datetime.now()};{reg[0]};{reg[1]};;{reg[2]};\n"
+        else:
+            #fault
+            return
+
+        #Check if the logging file exists already
+        if os.path.isfile('modbusLog.csv'):
+            with open('modbusLog.csv', 'a') as f:
+                f.write(logstr)
+        else:
+            with open('modbusLog.csv', 'w') as f:
+                f.write(f"Operation;Timestamp;Register Type;Register #; Description;Register Value;\n")
+                f.write(logstr)
 
     def _parseXml(self):
         """Parses xml file and validates the registers"""
@@ -141,8 +175,10 @@ class reader:
             for mapping in diNode.findall('mapping'):
                 mapDict = {
                     'register' : int(mapping.get('register')),
+                    'type' : 'di',
                     'description' : mapping.get('description', '-'),
-                    'value' : 0
+                    'value' : 0,
+                    'log' : mapping.get('log', False)
                 }
                 di.append(mapDict)
 
@@ -153,6 +189,7 @@ class reader:
             for mapping in irNode.findall('mapping'):
                 mapDict = {
                     'register' : int(mapping.get('register')),
+                    'type' : 'ir',
                     'description' : mapping.get('description', '-'),
                     'bit0' : mapping.get('bit0', '-'),
                     'bit1' : mapping.get('bit1', '-'),
@@ -170,7 +207,8 @@ class reader:
                     'bit13' : mapping.get('bit13', '-'),
                     'bit14' : mapping.get('bit14', '-'),
                     'bit15' : mapping.get('bit15', '-'),
-                    'value' : 0
+                    'value' : 0,
+                    'log' : mapping.get('log', False)
                 }
                 ir.append(mapDict)
 
@@ -181,6 +219,7 @@ class reader:
             for mapping in hrNode.findall('mapping'):
                 mapDict = {
                     'register' : int(mapping.get('register')),
+                    'type' : 'hr',
                     'description' : mapping.get('description', '-'),
                     'bit0' : mapping.get('bit0', '-'),
                     'bit1' : mapping.get('bit1', '-'),
@@ -198,7 +237,8 @@ class reader:
                     'bit13' : mapping.get('bit13', '-'),
                     'bit14' : mapping.get('bit14', '-'),
                     'bit15' : mapping.get('bit15', '-'),
-                    'value' : 0
+                    'value' : 0,
+                    'log' : mapping.get('log', False)
                 }
                 hr.append(mapDict)
 
@@ -209,8 +249,10 @@ class reader:
             for mapping in coNode.findall('mapping'):
                 mapDict = {
                     'register' : int(mapping.get('register')),
+                    'type' : 'co',
                     'description' : mapping.get('description', '-'),
-                    'value' : 0
+                    'value' : 0,
+                    'log' : mapping.get('log', False)
                 }
                 co.append(mapDict)
 
@@ -229,20 +271,114 @@ class reader:
         data['productName'] = deviceData.get("productName", '')
         data['modelName'] = deviceData.get("modelName", '')
         data['version'] = deviceData.get("version", '0.0-1')
-        data['ip'] = deviceData.get("ip")
+        data['modbusType'] = deviceData.get('modbusType')
+        data['com'] = deviceData.get("com", None)
+        data['baud'] = int(deviceData.get("baud", "9600"))
+        data['stopbits'] = int(deviceData.get("stopbits", "1"))
+        data['bytesize'] = int(deviceData.get("bytesize", "8"))
+        data['parity'] = deviceData.get("parity", "E")
+        data['ip'] = deviceData.get("ip", "localhost")
         data['port'] = int(deviceData.get("port", 502))
+        data['timeout'] = int(deviceData.get('timeout', "2"))
+        #Log to file can be all or partial
+        #all logs all, partial only those with the flag
+        data['log'] = deviceData.get('log', False)
 
         return data
 
     def connect(self):
         return self.client.connect()
 
+    def _update_reg(self, register):
+        try:
+            if register.get('type') == 'di':
+                data = self.client.read_discrete_inputs(address=register.get('register'), count=1)
+                if not isinstance(data, ExceptionResponse):
+                    register['value'] =  data.getBit(0)
+                else:
+                    register['value'] =   str(data)
+        
+            elif register.get('type') == 'co':
+                data = self.client.read_coils(address=register.get('register'), count=1)
+                if not isinstance(data, ExceptionResponse):
+                    register['value'] =   data.getBit(0)
+                else:
+                    register['value'] =    str(data)
+
+            elif register.get('type') == 'ir':
+                
+                data = self.client.read_input_registers(address=register.get('register'), count=1)
+                if not isinstance(data, ExceptionResponse):
+                    register['value'] = data.getRegister(0)
+                else:
+                    register['value'] =  str(data)
+
+            elif register.get('type') == 'hr':
+                
+                data = self.client.read_holding_registers(address=register.get('register'), count=1)
+                if not isinstance(data, ExceptionResponse):
+                    register['value'] = data.getRegister(0)
+                else:
+                    register['value'] =  str(data)
+        except Exception as e:
+            register['value'] =  str(e) + ' ' + str(data)
+            
+    def get_ir(self, register):
+        #gets the value of the register, regardless if it exists
+        if self.connect():
+            try:
+                data = self.client.read_input_registers(address=register, count=1)
+                if not isinstance(data, ExceptionResponse):
+                    return data.getRegister(0)
+                else:
+                    return  str(data)
+            except Exception as e:
+                return str(e) + str(data)
+
+    def get_hr(self, register):
+        #gets the value of the register, regardless if it exists
+        if self.connect():
+            try:
+                data = self.client.read_holding_registers(address=register, count=1)
+                if not isinstance(data, ExceptionResponse):
+                    return data.getRegister(0)
+                else:
+                    return  str(data)
+            except Exception as e:
+                return str(e) + str(data)
+
+    def get_di(self, register):
+        #gets the value of the register, regardless if it exists
+        if self.connect():
+            try:
+                data = self.client.read_discrete_inputs(address=register, count=1)
+                if not isinstance(data, ExceptionResponse):
+                    return data.getBit(0)
+                else:
+                    return  str(data)
+            except Exception as e:
+                return str(e) + ' ' + str(data)
+
+    def get_co(self, register):
+        #gets the value of the register, regardless if it exists
+        if self.connect():
+            try:
+                data = self.client.read_coils(address=register, count=1)
+                if not isinstance(data, ExceptionResponse):
+                    return data.getBit(0)
+                else:
+                    return  str(data)
+            except Exception as e:
+                return str(e) + ' ' + str(data)
+
     def write_coil(self, register, value):
         if self.connect():
             if value > 1:
                 value = 1
+            self._writeToLog(reg=('co', register, value))
             return self.client.write_coil(address=register, value=value)
 
     def write_register(self, register, value):
         if self.connect():
+            self._writeToLog(reg=('hr', register, value))
             return self.client.write_register(address=register, value=value)

@@ -1,8 +1,9 @@
 #Import pymodbus components
-from pymodbus.server.sync import StartTcpServer
+from pymodbus.server.sync import StartTcpServer, StartSerialServer
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSparseDataBlock
 from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
+from pymodbus.transaction import ModbusRtuFramer
 
 #Import local scripts componenets
 import xml.etree.ElementTree as ET
@@ -15,34 +16,34 @@ class Server:
     def __init__(self, xmlFile):
         self.xml = xmlFile
         validationInt = validateXml(self.xml)
-        if validationInt == -1: raise Exception('XML File Error: IP address missing')
-        elif validationInt == -2: raise Exception('XML File Error: No register mappings')
-        elif validationInt == -3: raise Exception('XML File Error: Duplicated Input register mapping')
-        elif validationInt == -4: raise Exception('XML File Error: Duplicated Discrete input mapping')
-        elif validationInt == -5: raise Exception('XML File Error: Duplicated Holding register mapping')
-        elif validationInt == -6: raise Exception('XML File Error: Duplicated Coil mapping')
+        if validationInt == -1: raise Exception('XML File Error: devicData node missing')
+        elif validationInt == -2: raise Exception('XML File Error: modbus type not set')
+        elif validationInt == -3: raise Exception('XML File Error: ip address missing')
+        elif validationInt == -4: raise Exception('XML File Error: comm port missing')
+        elif validationInt == -5: raise Exception('XML File Error: baud rate missing')
+        elif validationInt == -10: raise Exception('XML File Error: No register mappings')
+        elif validationInt == -11: raise Exception('XML File Error: Duplicated Input register mapping')
+        elif validationInt == -12: raise Exception('XML File Error: Duplicated Discrete input mapping')
+        elif validationInt == -13: raise Exception('XML File Error: Duplicated Holding register mapping')
+        elif validationInt == -14: raise Exception('XML File Error: Duplicated Coil mapping')
 
-        parsedData = self._parseXml()
-        registers = parsedData.get('registers')
+        self.xmlData = self._parseXml()
         
         store = ModbusSlaveContext(
-            di=ModbusSequentialDataBlock(0, registers.get('di')),
-            ir=ModbusSequentialDataBlock(0, registers.get('ir')),
-            co=ModbusSequentialDataBlock(0, registers.get('co')),
-            hr=ModbusSequentialDataBlock(0, registers.get('hr')),
+            di=ModbusSequentialDataBlock(0, self.xmlData.get('registers').get('di')),
+            ir=ModbusSequentialDataBlock(0, self.xmlData.get('registers').get('ir')),
+            co=ModbusSequentialDataBlock(0, self.xmlData.get('registers').get('co')),
+            hr=ModbusSequentialDataBlock(0, self.xmlData.get('registers').get('hr')),
             zero_mode=True)
 
         self.context = ModbusServerContext(slaves=store, single=True)
-        self.registers = registers
-        self.ip = parsedData.get('ip')
-        self.port = parsedData.get('port')
         self.deviceIdentity = ModbusDeviceIdentification()
-        self.deviceIdentity.VendorName = parsedData.get("vendorName")
-        self.deviceIdentity.ProductCode = parsedData.get("productCode")
-        self.deviceIdentity.VendorUrl = parsedData.get("vendorUrl")
-        self.deviceIdentity.ProductName = parsedData.get("productName")
-        self.deviceIdentity.ModelName = parsedData.get("modelName")
-        self.deviceIdentity.MajorMinorRevision = parsedData.get("Version")
+        self.deviceIdentity.VendorName = self.xmlData.get("vendorName")
+        self.deviceIdentity.ProductCode = self.xmlData.get("productCode")
+        self.deviceIdentity.VendorUrl = self.xmlData.get("vendorUrl")
+        self.deviceIdentity.ProductName = self.xmlData.get("productName")
+        self.deviceIdentity.ModelName = self.xmlData.get("modelName")
+        self.deviceIdentity.MajorMinorRevision = self.xmlData.get("Version")
 
     def _parseXml(self):
         """Parses xml file and validates the registers"""
@@ -111,44 +112,20 @@ class Server:
         data['productName'] = deviceData.get("productName", '')
         data['modelName'] = deviceData.get("modelName", '')
         data['version'] = deviceData.get("version", '0.0-1')
-        data['ip'] = deviceData.get("ip")
+        data['modbusType'] = deviceData.get('modbusType')
+        data['com'] = deviceData.get("com", None)
+        data['baud'] = int(deviceData.get("baud", "9600"))
+        data['stopbits'] = int(deviceData.get("stopbits", "1"))
+        data['bytesize'] = int(deviceData.get("bytesize", "8"))
+        data['parity'] = deviceData.get("parity", "E")
+        data['ip'] = deviceData.get("ip", "localhost")
         data['port'] = int(deviceData.get("port", 502))
+        data['timeout'] = int(deviceData.get('timeout', "2"))
 
         return data
 
-    def incRegValues(self, cycle_s):
-        """ A worker process that runs on a given cycle and
-        updates live values of the context.
-        """
-        while True:
-
-            #Get values from only the first slave/ multiple slaves unsupported
-            #Toggle values of coils and digital inputs
-            di_values = self.context[0].getValues(2, 0, count=len(self.registers.get('di')))
-            new_values = [v - 1 if v == 1 else v + 1 for v in di_values]
-            self.context[0].setValues(2, 0, new_values)
-
-            co_values = self.context[0].getValues(1, 0, count=len(self.registers.get('co')))
-            new_values = [v - 1 if v == 1 else v + 1 for v in co_values]
-            self.context[0].setValues(1, 0, new_values)
-
-            hr_values = self.context[0].getValues(3, 0, count=len(self.registers.get('hr')))
-            new_values = [v + 1 for v in hr_values]
-            self.context[0].setValues(3, 0, new_values)
-
-            ir_values = self.context[0].getValues(4, 0, count=len(self.registers.get('ir')))
-            new_values = [v + 1 for v in ir_values]
-            self.context[0].setValues(4, 0, new_values)
-
-            #print(self.context[0].getValues(1, 0, count=len(self.registers.get('di'))))
-            #print(self.context[0].getValues(2, 0, count=65535))
-            #print(self.context[0].getValues(3, 0, count=65535))
-            #print(self.context[0].getValues(4, 0, count=65535))
-            
-            time.sleep(cycle_s)
-
-    def run_server(self, increment = True, cycle_s = 5, debug = True):
-        """Runs the modbus tcp server with given register information. if increment is true, the register values are dynamic and incrementing by one
+    def run_server(self, callback=None, debug = True):
+        """Runs the modbus tcp or rtu server with given register information. if increment is true, the register values are dynamic and incrementing by one
         every interval provided in cycle_s argument"""
         if debug:
             logging.basicConfig()
@@ -156,14 +133,50 @@ class Server:
             log.setLevel(logging.DEBUG)
 
         try:
-            if increment:
-                thread = Thread(target=self.incRegValues, args=(cycle_s,), daemon=True)
+            #Data callback function will be executed as a separate thread
+            if callback != None:
+                thread = Thread(target=callback, args=(self.context,), daemon=True)
                 thread.start()
 
-            print(f"Running server on IP: {self.ip} and port {self.port}")
-            StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.ip, self.port))
+            if self.xmlData.get('modbusType') == 'tcp/ip':
+                print(f"Running server on IP: {self.xmlData.get('ip')} and port {self.xmlData.get('port')}")
+                StartTcpServer(self.context, identity=self.deviceIdentity, address=(self.xmlData.get('ip'), self.xmlData.get('port')))
+
+            elif self.xmlData.get('modbusType') == 'rtu':
+                print(f"Running server on COM: {self.xmlData.get('com')} and baudrate {self.xmlData.get('baud')}")
+                StartSerialServer(self.context, timeout=self.xmlData.get('timeout'), framer=ModbusRtuFramer, identity=self.deviceIdentity, port=self.xmlData.get('com'), stopbits=self.xmlData.get('stopbits'), bytesize=self.xmlData.get('bytesize'), parity=self.xmlData.get('parity'), baudrate=self.xmlData.get('baud'))
+ 
         except KeyboardInterrupt:
             print('Server stopped')
+
+#Helpfull data simulators
+def incrementer(context):
+    """ A worker process that runs on a given cycle and
+    updates live values of the context.
+    """
+    while True:
+        updateStartTime = time.perf_counter()
+
+        #Get values from only the first slave/ multiple slaves unsupported
+        #Toggle values of coils and digital inputs
+        di_values = context[0].getValues(2, 0, count=65535)
+        new_values = [v - 1 if v == 1 else v + 1 for v in di_values]
+        context[0].setValues(2, 0, new_values)
+        co_values = context[0].getValues(1, 0, count=65535)
+        new_values = [v - 1 if v == 1 else v + 1 for v in co_values]
+        context[0].setValues(1, 0, new_values)
+        hr_values = context[0].getValues(3, 0, count=65535)
+        new_values = [v + 1 for v in hr_values]
+        context[0].setValues(3, 0, new_values)
+        ir_values = context[0].getValues(4, 0, count=65535)
+        new_values = [v + 1 for v in ir_values]
+        context[0].setValues(4, 0, new_values)
+        
+        #Calculate the latency
+        latency_ms = int((time.perf_counter() - updateStartTime) * 1000)
+        #if cycle time is faster than latency, go to sleep to match the cycle time
+        if latency_ms < 2000:
+            time.sleep((2000 - latency_ms) / 1000)
 
 ####MAIN APP#######
 if __name__ == '__main__':
@@ -172,27 +185,21 @@ if __name__ == '__main__':
     #Default arguments
     increment = False
     debug = False
-    cycleTime_s = 1
+    callback = None
 
     opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
     args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
     #xml file path must be first
     xmlFilePath = args[0]
 
-    try:
-        cycleTime_s = int(int(args[1]) / 1000)
-    except IndexError:
-        #If cycle time not passed in then use default
-        pass
-
     if '-i' in opts:
-        increment = True
+        callback = incrementer
     if '--increment' in opts:
-        increment = True
+        callback = incrementer
     if '-d' in opts:
         debug = True
     if '--debug' in opts:
         debug = True
 
     sim = Server(xmlFilePath)
-    sim.run_server(increment=increment, cycle_s = cycleTime_s, debug=debug)
+    sim.run_server(callback=callback, debug=debug)
